@@ -1,0 +1,25 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "src/index.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "src/index.ts"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/expire-trials",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/cleanup-chats",
+      "schedule": "0 0 * * *"
+    }
+  ]
+}

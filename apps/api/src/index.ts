@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import { createServer } from 'http';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -18,15 +17,15 @@ import { profileRoutes } from './modules/profile/profile.controller';
 import { settingsRoutes } from './modules/settings/settings.controller';
 import { communityRoutes } from './modules/community/community.controller';
 import { communitySocialRoutes } from './modules/community/community-social.controller';
-import { setupSocketIO } from './realtime';
-import { expireTrials } from './jobs/expireTrials';
-import { scheduleChatCleanup } from './jobs/cleanupChats';
+import { friendsRoutes } from './modules/friends/friends.controller';
+import { realtimeRoutes } from './realtime';
+import { cronRoutes } from './jobs/cron.controller';
 
 // ── Express App ────────────────────────────────────────────────────────────
 const app = express();
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: (process.env.FRONTEND_URL || 'http://localhost:3000').split(',').map(s => s.trim()),
   credentials: true,
 }));
 app.use(express.json());
@@ -44,6 +43,9 @@ app.use('/api/profile', profileRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/community-social', communitySocialRoutes);
+app.use('/api/friends', friendsRoutes);
+app.use('/api/realtime', realtimeRoutes);
+app.use('/api/cron', cronRoutes);
 
 // ── Health Check ───────────────────────────────────────────────────────────
 app.get('/health', async (_req, res) => {
@@ -55,22 +57,28 @@ app.get('/health', async (_req, res) => {
   }
 });
 
-// ── HTTP Server + Socket.IO ────────────────────────────────────────────────
-const PORT = process.env.PORT || 4000;
-const server = createServer(app);
-setupSocketIO(server);
+// ── Local Development Server ───────────────────────────────────────────────
+// Only start the server when NOT running on Vercel (serverless)
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 4000;
 
-server.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
-  console.log(`   Health: http://localhost:${PORT}/health`);
-  console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+  app.listen(PORT, () => {
+    console.log(`✅ Server running on port ${PORT}`);
+    console.log(`   Health: http://localhost:${PORT}/health`);
+    console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
+  });
 
-// ── Daily Cron: Expire Free Trials ─────────────────────────────────────────
-// Run at midnight every day. In production use a proper scheduler (node-cron, BullMQ, etc.)
-const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
-expireTrials(); // Run once on startup to catch any missed expirations
-setInterval(expireTrials, TWENTY_FOUR_HOURS);
+  // ── Background Cron Jobs (local only) ────────────────────────────────────
+  // These run in-process during local development.
+  // On Vercel, use Vercel Cron Jobs to call /api/cron/* endpoints instead.
+  const { expireTrials } = require('./jobs/expireTrials');
+  const { scheduleChatCleanup } = require('./jobs/cleanupChats');
 
-// ── Daily Cron: Chat Cleanup ───────────────────────────────────────────────
-scheduleChatCleanup();
+  const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+  expireTrials(); // Run once on startup to catch any missed expirations
+  setInterval(expireTrials, TWENTY_FOUR_HOURS);
+  scheduleChatCleanup();
+}
+
+// ── Export for Vercel Serverless ────────────────────────────────────────────
+export default app;

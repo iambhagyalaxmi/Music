@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../../db';
 import { requireAuth, AuthenticatedRequest } from '../../middlewares/auth.middleware';
-import { getIO } from '../../realtime';
+import { pusher } from '../../realtime';
 
 const router = Router();
 
@@ -110,7 +110,7 @@ router.post('/polls', requireAuth, async (req: Request, res: Response) => {
       },
       include: { options: true }
     });
-    if (getIO()) getIO().of('/community').emit('feed:update', { type: 'POLL', poll });
+    pusher.trigger('community', 'feed-update', { type: 'POLL', poll }).catch(() => {});
     res.status(201).json(poll);
   } catch (err) {
     res.status(500).json({ error: 'Internal Server Error' });
@@ -141,7 +141,7 @@ router.post('/polls/:pollId/vote', requireAuth, async (req: Request, res: Respon
     }
 
     const vote = await db.communityPollVote.create({ data: { optionId, userId } });
-    if (getIO()) getIO().of('/community').emit('poll:vote', { pollId, optionId, userId });
+    pusher.trigger('community', 'poll-vote', { pollId, optionId, userId }).catch(() => {});
     res.status(200).json({ message: 'Voted successfully', vote });
   } catch (err) {
     res.status(500).json({ error: 'Internal Server Error' });

@@ -2,7 +2,7 @@ import { Router, Request, Response } from 'express';
 import { db } from '../../db';
 import { requireAuth, AuthenticatedRequest } from '../../middlewares/auth.middleware';
 import { ReactionEmoji } from '@prisma/client';
-import { getIO } from '../../realtime';
+import { pusher } from '../../realtime';
 
 const router = Router();
 
@@ -33,13 +33,10 @@ router.post('/', requireAuth, async (req: Request, res: Response) => {
       }
     });
 
-    if (getIO()) {
-      const io = getIO().of('/community');
-      if (post.parentId) {
-        io.emit('post:comment', post);
-      } else {
-        io.emit('feed:update', post);
-      }
+    if (post.parentId) {
+      pusher.trigger('community', 'post-comment', post).catch(() => {});
+    } else {
+      pusher.trigger('community', 'feed-update', post).catch(() => {});
     }
 
     res.status(201).json(post);
@@ -116,9 +113,7 @@ router.put('/:id', requireAuth, async (req: Request, res: Response) => {
       }
     });
 
-    if (getIO()) {
-      getIO().of('/community').emit('feed:update', updatedPost);
-    }
+    pusher.trigger('community', 'feed-update', updatedPost).catch(() => {});
 
     res.json(updatedPost);
   } catch (error) {
@@ -141,9 +136,7 @@ router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
 
     await db.communityPost.delete({ where: { id: postId } });
 
-    if (getIO()) {
-      getIO().of('/community').emit('feed:update', { id: postId, deleted: true });
-    }
+    pusher.trigger('community', 'feed-update', { id: postId, deleted: true }).catch(() => {});
 
     res.json({ message: 'Post deleted successfully' });
   } catch (error) {
@@ -184,7 +177,7 @@ router.post('/:id/react', requireAuth, async (req: Request, res: Response) => {
           where: { id: existingReaction.id },
           data: { emoji: emoji as ReactionEmoji }
         });
-        if (getIO()) getIO().of('/community').emit('post:reaction', { postId, reaction: updatedReaction });
+        pusher.trigger('community', 'post-reaction', { postId, reaction: updatedReaction }).catch(() => {});
         return res.json({ message: 'Reaction updated', reaction: updatedReaction });
       }
     }
@@ -198,7 +191,7 @@ router.post('/:id/react', requireAuth, async (req: Request, res: Response) => {
       }
     });
 
-    if (getIO()) getIO().of('/community').emit('post:reaction', { postId, reaction: newReaction });
+    pusher.trigger('community', 'post-reaction', { postId, reaction: newReaction }).catch(() => {});
     res.status(201).json({ message: 'Reaction added', reaction: newReaction });
   } catch (error) {
     console.error('Error reacting to post:', error);
