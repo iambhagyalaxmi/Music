@@ -1,0 +1,1697 @@
+// ============================================================
+// SoundSphere — Production Prisma Schema
+// PostgreSQL (NeonDB) | Prisma ORM
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum Role {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum SubscriptionTier {
+  FREE_TRIAL
+  PREMIUM
+  FAMILY
+  STUDENT
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+enum ReactionEmoji {
+  HEART
+  FIRE
+  LOVE_EYES
+  LAUGH
+  COOL
+  CRY
+  CLAP
+  PARTY
+  THUMBS_UP
+  THUMBS_DOWN
+}
+
+enum NotificationType {
+  NEW_FOLLOWER
+  FRIEND_REQUEST
+  FRIEND_ACCEPTED
+  NEW_MESSAGE
+  SONG_REACTION
+  PLAYLIST_SHARE
+  NEW_RECOMMENDATION
+  SYSTEM
+  COMMUNITY_ALERT
+  FAN_CLUB_INVITE
+}
+
+enum CallStatus {
+  INITIATED
+  RINGING
+  CONNECTED
+  ENDED
+  MISSED
+  REJECTED
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  AUDIO
+  FILE
+  SONG_SHARE
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  RESOLVED
+  DISMISSED
+}
+
+enum ReportReason {
+  SPAM
+  HARASSMENT
+  INAPPROPRIATE_CONTENT
+  COPYRIGHT
+  OTHER
+}
+
+// ============================================================
+// MODULE 1: AUTHENTICATION
+// ============================================================
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  username      String    @unique
+  passwordHash  String?
+  role          Role      @default(USER)
+  emailVerified Boolean   @default(false)
+  isActive      Boolean   @default(true)
+  deletedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  profile                 UserProfile?
+  googleAccount           GoogleAccount?
+  spotifyAccount          SpotifyAccount?
+  sessions                Session[]
+  refreshTokens           RefreshToken[]
+  subscription            Subscription?
+  playlists               Playlist[]
+  playlistFollowers       PlaylistFollower[]
+  playlistCollaborators   PlaylistCollaborator[]
+  likedSongs              LikedSong[]
+  favorites               Favorite[]
+  downloadedSongs         DownloadedSong[]
+  listeningHistory        ListeningHistory[]
+  recentlyPlayed          RecentlyPlayed[]
+  queue                   Queue[]
+  playbackHistory         PlaybackHistory[]
+  songReactions           SongReaction[]
+  videoReactions          VideoReaction[]
+  followedBy              Follower[]               @relation("UserFollowedBy")
+  following               Follower[]               @relation("UserFollowing")
+  sentFriendRequests      FriendRequest[]          @relation("SentRequests")
+  receivedFriendRequests  FriendRequest[]          @relation("ReceivedRequests")
+  friends                 Friend[]                 @relation("UserFriends")
+  friendOf                Friend[]                 @relation("FriendOf")
+  blockedUsers            BlockedUser[]            @relation("Blocker")
+  blockedBy               BlockedUser[]            @relation("BlockedBy")
+  userActivity            UserActivity[]
+  conversationMembers     ConversationMember[]
+  messages                Message[]
+  messageReactions        MessageReaction[]
+  messageReadStatuses     MessageReadStatus[]
+  typingStatuses          TypingStatus[]
+  pinnedMessages          PinnedMessage[]
+  callParticipants        CallParticipant[]
+  callLogsInitiated       CallLog[]                @relation("CallInitiator")
+  recommendations         Recommendation[]
+  userPreferences         UserPreference?
+  listeningPatterns       ListeningPattern[]
+  moodAnalyses            MoodAnalysis[]
+  recommendationFeedbacks RecommendationFeedback[]
+  searchHistory           SearchHistory[]
+  notifications           Notification[]
+  notificationSettings    NotificationSettings?
+  pushTokens              PushToken[]
+  userDevices             UserDevice[]
+  activeSessions          ActiveSession[]
+  dailyStats              DailyListeningStats[]
+  weeklyStats             WeeklyListeningStats[]
+  monthlyStats            MonthlyListeningStats[]
+  userReports             UserReport[]             @relation("ReportedUser")
+  reportsMade             UserReport[]             @relation("ReportingUser")
+  auditLogs               AuditLog[]
+  privacySettings         PrivacySettings?
+  userStatistics          UserStatistics?
+  userAchievements        UserAchievement[]
+  communityPosts          CommunityPost[]
+  communityPostReactions  CommunityPostReaction[]
+  createdPolls            CommunityPoll[]
+  pollVotes               CommunityPollVote[]
+  pollReactions           CommunityPollReaction[]
+  ownedFanClubs           FanClub[]
+  fanClubMemberships      FanClubMember[]
+
+  playbackSettings PlaybackSettings?
+  audioSettings    AudioSettings?
+  voiceSettings    VoiceSettings?
+  chatSettings     ChatSettings?
+  themeSettings    ThemeSettings?
+  languageSettings LanguageSettings?
+
+  @@index([email])
+  @@index([username])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+model UserProfile {
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  displayName String
+  bio         String?
+  avatarUrl   String?
+  bannerUrl   String?
+  country     String?
+  dateOfBirth DateTime?
+  website     String?
+  isPublic    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model GoogleAccount {
+  id           String    @id @default(uuid())
+  userId       String    @unique
+  googleId     String    @unique
+  email        String
+  name         String?
+  picture      String?
+  accessToken  String?
+  refreshToken String?
+  expiresAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([googleId])
+  @@map("google_accounts")
+}
+
+model SpotifyAccount {
+  id           String    @id @default(uuid())
+  userId       String    @unique
+  spotifyId    String    @unique
+  email        String
+  displayName  String?
+  imageUrl     String?
+  accessToken  String?
+  refreshToken String?
+  expiresAt    DateTime?
+  scopes       String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([spotifyId])
+  @@map("spotify_accounts")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+// ============================================================
+// MODULE 2: SUBSCRIPTIONS & BILLING
+// ============================================================
+
+model Subscription {
+  id                 String             @id @default(uuid())
+  userId             String             @unique
+  tier               SubscriptionTier   @default(FREE_TRIAL)
+  status             SubscriptionStatus @default(TRIAL)
+  trialStartedAt     DateTime           @default(now())
+  trialEndsAt        DateTime
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  cancelledAt        DateTime?
+  stripeCustomerId   String?            @unique
+  stripeSubId        String?            @unique
+  priceId            String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([trialEndsAt])
+  @@map("subscriptions")
+}
+
+// ============================================================
+// MODULE 3: MUSIC
+// ============================================================
+
+model Artist {
+  id         String    @id @default(uuid())
+  name       String
+  slug       String    @unique
+  bio        String?
+  imageUrl   String?
+  bannerUrl  String?
+  country    String?
+  isVerified Boolean   @default(false)
+  spotifyId  String?   @unique
+  deletedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  songs  Song[]
+  albums Album[]
+
+  @@index([name])
+  @@index([slug])
+  @@index([deletedAt])
+  @@map("artists")
+}
+
+model Album {
+  id          String    @id @default(uuid())
+  artistId    String
+  title       String
+  slug        String
+  coverUrl    String?
+  releaseDate DateTime?
+  albumType   String?
+  spotifyId   String?   @unique
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  artist Artist @relation(fields: [artistId], references: [id], onDelete: Restrict)
+  songs  Song[]
+
+  @@unique([artistId, slug])
+  @@index([artistId])
+  @@index([deletedAt])
+  @@map("albums")
+}
+
+model Genre {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  slug        String  @unique
+  description String?
+  iconUrl     String?
+
+  songGenres SongGenre[]
+
+  @@map("genres")
+}
+
+model Language {
+  id   String @id @default(uuid())
+  name String @unique
+  code String @unique
+
+  songLanguages SongLanguage[]
+
+  @@map("languages")
+}
+
+model Song {
+  id          String    @id @default(uuid())
+  artistId    String
+  albumId     String?
+  title       String
+  slug        String
+  durationMs  Int
+  trackNumber Int?
+  isExplicit  Boolean   @default(false)
+  isrc        String?   @unique
+  spotifyId   String?   @unique
+  youtubeId   String?
+  playCount   BigInt    @default(0)
+  coverUrl    String?
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  artist           Artist             @relation(fields: [artistId], references: [id], onDelete: Restrict)
+  album            Album?             @relation(fields: [albumId], references: [id], onDelete: SetNull)
+  files            SongFile[]
+  musicVideos      MusicVideo[]
+  songGenres       SongGenre[]
+  songLanguages    SongLanguage[]
+  lyrics           SongLyric[]
+  tags             SongTag[]
+  playlistSongs    PlaylistSong[]
+  likedBy          LikedSong[]
+  favorites        Favorite[]
+  downloads        DownloadedSong[]
+  listeningHistory ListeningHistory[]
+  recentlyPlayed   RecentlyPlayed[]
+  queue            Queue[]
+  playbackHistory  PlaybackHistory[]
+  songReactions    SongReaction[]
+  recommendations  Recommendation[]
+  communityPosts   CommunityPost[]
+
+  @@unique([artistId, slug])
+  @@index([artistId])
+  @@index([albumId])
+  @@index([deletedAt])
+  @@index([playCount(sort: Desc)])
+  @@map("songs")
+}
+
+model SongFile {
+  id         String   @id @default(uuid())
+  songId     String
+  fileUrl    String
+  format     String
+  bitrate    Int?
+  fileSizeKb Int?
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  song Song @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@index([songId])
+  @@map("song_files")
+}
+
+model MusicVideo {
+  id           String    @id @default(uuid())
+  songId       String
+  title        String
+  youtubeId    String?   @unique
+  videoUrl     String?
+  thumbnailUrl String?
+  durationMs   Int?
+  viewCount    BigInt    @default(0)
+  deletedAt    DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  song           Song            @relation(fields: [songId], references: [id], onDelete: Cascade)
+  videoReactions VideoReaction[]
+
+  @@index([songId])
+  @@index([deletedAt])
+  @@map("music_videos")
+}
+
+model SongGenre {
+  songId  String
+  genreId String
+
+  song  Song  @relation(fields: [songId], references: [id], onDelete: Cascade)
+  genre Genre @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@id([songId, genreId])
+  @@map("song_genres")
+}
+
+model SongLanguage {
+  songId     String
+  languageId String
+
+  song     Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  language Language @relation(fields: [languageId], references: [id], onDelete: Cascade)
+
+  @@id([songId, languageId])
+  @@map("song_languages")
+}
+
+model SongLyric {
+  id        String   @id @default(uuid())
+  songId    String
+  content   String
+  language  String?
+  isSynced  Boolean  @default(false)
+  lrcData   Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  song Song @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@index([songId])
+  @@map("song_lyrics")
+}
+
+model SongTag {
+  songId String
+  tag    String
+
+  song Song @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@id([songId, tag])
+  @@index([tag])
+  @@map("song_tags")
+}
+
+// ============================================================
+// MODULE 4: PLAYLISTS
+// ============================================================
+
+model Playlist {
+  id          String    @id @default(uuid())
+  userId      String
+  title       String
+  description String?
+  coverUrl    String?
+  isPublic    Boolean   @default(true)
+  isOfficial  Boolean   @default(false)
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user           User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  songs          PlaylistSong[]
+  collaborators  PlaylistCollaborator[]
+  followers      PlaylistFollower[]
+  communityPosts CommunityPost[]
+
+  @@index([userId])
+  @@index([deletedAt])
+  @@index([isPublic])
+  @@map("playlists")
+}
+
+model PlaylistSong {
+  id         String   @id @default(uuid())
+  playlistId String
+  songId     String
+  addedById  String?
+  position   Int
+  addedAt    DateTime @default(now())
+
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  song     Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([playlistId, songId])
+  @@index([playlistId])
+  @@map("playlist_songs")
+}
+
+model PlaylistCollaborator {
+  playlistId String
+  userId     String
+  addedAt    DateTime @default(now())
+
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([playlistId, userId])
+  @@map("playlist_collaborators")
+}
+
+model PlaylistFollower {
+  playlistId String
+  userId     String
+  followedAt DateTime @default(now())
+
+  playlist Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([playlistId, userId])
+  @@index([playlistId])
+  @@map("playlist_followers")
+}
+
+// ============================================================
+// MODULE 5: SOCIAL
+// ============================================================
+
+model Follower {
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowedBy", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@id([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@map("followers")
+}
+
+model FriendRequest {
+  id         String              @id @default(uuid())
+  senderId   String
+  receiverId String
+  status     FriendRequestStatus @default(PENDING)
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+
+  sender   User @relation("SentRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedRequests", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([senderId, receiverId])
+  @@index([receiverId, status])
+  @@map("friend_requests")
+}
+
+model Friend {
+  userId    String
+  friendId  String
+  createdAt DateTime @default(now())
+
+  user   User @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friend User @relation("FriendOf", fields: [friendId], references: [id], onDelete: Cascade)
+
+  @@id([userId, friendId])
+  @@index([userId])
+  @@map("friends")
+}
+
+model BlockedUser {
+  blockerId String
+  blockedId String
+  reason    String?
+  createdAt DateTime @default(now())
+
+  blocker User @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked User @relation("BlockedBy", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@index([blockerId])
+  @@map("blocked_users")
+}
+
+model UserActivity {
+  id           String   @id @default(uuid())
+  userId       String
+  activityType String
+  metadata     Json?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("user_activity")
+}
+
+// ============================================================
+// MODULE 6: EMOJI REACTIONS
+// ============================================================
+
+model SongReaction {
+  id        String        @id @default(uuid())
+  userId    String
+  songId    String
+  emoji     ReactionEmoji
+  createdAt DateTime      @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  song Song @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, songId, emoji])
+  @@index([songId, emoji])
+  @@map("song_reactions")
+}
+
+model VideoReaction {
+  id           String        @id @default(uuid())
+  userId       String
+  musicVideoId String
+  emoji        ReactionEmoji
+  createdAt    DateTime      @default(now())
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  musicVideo MusicVideo @relation(fields: [musicVideoId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, musicVideoId, emoji])
+  @@index([musicVideoId, emoji])
+  @@map("video_reactions")
+}
+
+model ReactionSummary {
+  id         String        @id @default(uuid())
+  targetType String
+  targetId   String
+  emoji      ReactionEmoji
+  count      Int           @default(0)
+  updatedAt  DateTime      @updatedAt
+
+  @@unique([targetType, targetId, emoji])
+  @@index([targetId, targetType])
+  @@map("reaction_summaries")
+}
+
+// ============================================================
+// MODULE 7: LIVE CHAT
+// ============================================================
+
+model Conversation {
+  id        String   @id @default(uuid())
+  isGroup   Boolean  @default(false)
+  name      String?
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members        ConversationMember[]
+  messages       Message[]
+  pinnedMessages PinnedMessage[]
+
+  @@map("conversations")
+}
+
+model ConversationMember {
+  conversationId String
+  userId         String
+  joinedAt       DateTime  @default(now())
+  lastReadAt     DateTime?
+  isAdmin        Boolean   @default(false)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+  @@index([userId])
+  @@map("conversation_members")
+}
+
+model Message {
+  id             String      @id @default(uuid())
+  conversationId String
+  senderId       String
+  type           MessageType @default(TEXT)
+  content        String?
+  metadata       Json?
+  replyToId      String?
+  isEdited       Boolean     @default(false)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  conversation    Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender          User                @relation(fields: [senderId], references: [id], onDelete: Restrict)
+  replyTo         Message?            @relation("Replies", fields: [replyToId], references: [id], onDelete: SetNull)
+  replies         Message[]           @relation("Replies")
+  reactions       MessageReaction[]
+  readStatuses    MessageReadStatus[]
+  attachments     Attachment[]
+  deletedMessages DeletedMessage[]
+  pinnedMessages  PinnedMessage[]
+
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@map("messages")
+}
+
+model MessageReaction {
+  id        String        @id @default(uuid())
+  messageId String
+  userId    String
+  emoji     ReactionEmoji
+  createdAt DateTime      @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId, emoji])
+  @@index([messageId])
+  @@map("message_reactions")
+}
+
+model Attachment {
+  id        String   @id @default(uuid())
+  messageId String
+  fileUrl   String
+  fileName  String
+  mimeType  String
+  sizeBytes BigInt
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@map("attachments")
+}
+
+model MessageReadStatus {
+  messageId String
+  userId    String
+  readAt    DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([messageId, userId])
+  @@map("message_read_statuses")
+}
+
+model TypingStatus {
+  conversationId String
+  userId         String
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([conversationId, userId])
+  @@map("typing_statuses")
+}
+
+model PinnedMessage {
+  conversationId String
+  messageId      String
+  pinnedById     String
+  pinnedAt       DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  message      Message      @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  pinnedBy     User         @relation(fields: [pinnedById], references: [id], onDelete: Restrict)
+
+  @@id([conversationId, messageId])
+  @@map("pinned_messages")
+}
+
+model DeletedMessage {
+  id        String   @id @default(uuid())
+  messageId String
+  deletedBy String
+  deletedAt DateTime @default(now())
+  reason    String?
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@map("deleted_messages")
+}
+
+// ============================================================
+// MODULE 8: VOICE CALLING (WebRTC)
+// ============================================================
+
+model CallSession {
+  id        String     @id @default(uuid())
+  roomId    String?
+  status    CallStatus @default(INITIATED)
+  startedAt DateTime   @default(now())
+  endedAt   DateTime?
+
+  participants  CallParticipant[]
+  callLogs      CallLog[]
+  iceCandidates ICECandidate[]
+
+  @@index([status])
+  @@map("call_sessions")
+}
+
+model CallParticipant {
+  id            String    @id @default(uuid())
+  callSessionId String
+  userId        String
+  joinedAt      DateTime  @default(now())
+  leftAt        DateTime?
+  isMuted       Boolean   @default(false)
+  isCameraOn    Boolean   @default(false)
+
+  callSession CallSession @relation(fields: [callSessionId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([callSessionId, userId])
+  @@map("call_participants")
+}
+
+model CallLog {
+  id            String   @id @default(uuid())
+  callSessionId String
+  initiatorId   String
+  durationSecs  Int?
+  endReason     String?
+  createdAt     DateTime @default(now())
+
+  callSession CallSession @relation(fields: [callSessionId], references: [id], onDelete: Cascade)
+  initiator   User        @relation("CallInitiator", fields: [initiatorId], references: [id], onDelete: Restrict)
+
+  @@index([initiatorId])
+  @@map("call_logs")
+}
+
+model ICECandidate {
+  id            String   @id @default(uuid())
+  callSessionId String
+  fromUserId    String
+  candidate     Json
+  createdAt     DateTime @default(now())
+
+  callSession CallSession @relation(fields: [callSessionId], references: [id], onDelete: Cascade)
+
+  @@index([callSessionId])
+  @@map("ice_candidates")
+}
+
+// ============================================================
+// MODULE 9: LISTENING HISTORY
+// ============================================================
+
+model ListeningHistory {
+  id         String   @id @default(uuid())
+  userId     String
+  songId     String
+  listenedAt DateTime @default(now())
+  durationMs Int?
+  completed  Boolean  @default(false)
+  sourceType String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  song Song @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@index([userId, listenedAt(sort: Desc)])
+  @@index([songId])
+  @@map("listening_history")
+}
+
+model RecentlyPlayed {
+  id       String   @id @default(uuid())
+  userId   String
+  songId   String
+  playedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  song Song @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, songId])
+  @@index([userId, playedAt(sort: Desc)])
+  @@map("recently_played")
+}
+
+model Favorite {
+  userId    String
+  songId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  song Song @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@id([userId, songId])
+  @@index([userId])
+  @@map("favorites")
+}
+
+model LikedSong {
+  userId  String
+  songId  String
+  likedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  song Song @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@id([userId, songId])
+  @@index([userId])
+  @@map("liked_songs")
+}
+
+model DownloadedSong {
+  id           String    @id @default(uuid())
+  userId       String
+  songId       String
+  localPath    String?
+  downloadedAt DateTime  @default(now())
+  expiresAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  song Song @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, songId])
+  @@map("downloaded_songs")
+}
+
+model Queue {
+  id       String   @id @default(uuid())
+  userId   String
+  songId   String
+  position Int
+  addedAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  song Song @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, songId])
+  @@index([userId, position])
+  @@map("queue")
+}
+
+model PlaybackHistory {
+  id         String   @id @default(uuid())
+  userId     String
+  songId     String
+  positionMs Int      @default(0)
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  song Song @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, songId])
+  @@map("playback_history")
+}
+
+// ============================================================
+// MODULE 10: AI RECOMMENDATIONS
+// ============================================================
+
+model RecommendationModel {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  version     String
+  description String?
+  isActive    Boolean  @default(true)
+  config      Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  recommendations Recommendation[]
+
+  @@map("recommendation_models")
+}
+
+model Recommendation {
+  id        String   @id @default(uuid())
+  userId    String
+  songId    String
+  modelId   String?
+  score     Float
+  reason    String?
+  isShown   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user  User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  song  Song                 @relation(fields: [songId], references: [id], onDelete: Cascade)
+  model RecommendationModel? @relation(fields: [modelId], references: [id], onDelete: SetNull)
+
+  @@index([userId, score(sort: Desc)])
+  @@index([createdAt])
+  @@map("recommendations")
+}
+
+model UserPreference {
+  userId          String   @id
+  favoriteGenres  String[]
+  favoriteArtists String[]
+  moodPreferences Json?
+  tempo           String?
+  energy          String?
+  language        String?
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model ListeningPattern {
+  id             String   @id @default(uuid())
+  userId         String
+  hourOfDay      Int?
+  dayOfWeek      Int?
+  avgSessionMins Float?
+  topGenres      Json?
+  topArtists     Json?
+  calculatedAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("listening_patterns")
+}
+
+model MoodAnalysis {
+  id         String   @id @default(uuid())
+  userId     String
+  mood       String
+  confidence Float
+  analyzedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, analyzedAt(sort: Desc)])
+  @@map("mood_analyses")
+}
+
+model RecommendationFeedback {
+  id               String   @id @default(uuid())
+  userId           String
+  recommendationId String?
+  songId           String
+  feedback         String
+  createdAt        DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("recommendation_feedback")
+}
+
+// ============================================================
+// MODULE 11: SEARCH
+// ============================================================
+
+model SearchHistory {
+  id         String   @id @default(uuid())
+  userId     String
+  query      String
+  resultType String?
+  searchedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, searchedAt(sort: Desc)])
+  @@map("search_history")
+}
+
+model TrendingSearch {
+  id        String   @id @default(uuid())
+  query     String   @unique
+  count     BigInt   @default(1)
+  region    String?
+  updatedAt DateTime @updatedAt
+
+  @@index([count(sort: Desc)])
+  @@index([region])
+  @@map("trending_searches")
+}
+
+// ============================================================
+// MODULE 12: NOTIFICATIONS
+// ============================================================
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType
+  title     String
+  body      String
+  data      Json?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model NotificationSettings {
+  userId             String   @id
+  emailNotifications Boolean  @default(true)
+  pushNotifications  Boolean  @default(true)
+  newFollower        Boolean  @default(true)
+  friendRequests     Boolean  @default(true)
+  messages           Boolean  @default(true)
+  recommendations    Boolean  @default(true)
+  updatedAt          DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_settings")
+}
+
+model PushToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  platform  String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_tokens")
+}
+
+// ============================================================
+// MODULE 13: DEVICES
+// ============================================================
+
+model UserDevice {
+  id          String   @id @default(uuid())
+  userId      String
+  deviceName  String?
+  deviceType  String?
+  platform    String?
+  osVersion   String?
+  appVersion  String?
+  fingerprint String?  @unique
+  lastSeenAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("user_devices")
+}
+
+model ActiveSession {
+  id         String   @id @default(uuid())
+  userId     String
+  deviceId   String?
+  ipAddress  String?
+  startedAt  DateTime @default(now())
+  lastPingAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("active_sessions")
+}
+
+// ============================================================
+// MODULE 14: ANALYTICS
+// ============================================================
+
+model DailyListeningStats {
+  id           String   @id @default(uuid())
+  userId       String
+  recordedDate DateTime @db.Date
+  totalMins    Float    @default(0)
+  songsPlayed  Int      @default(0)
+  topGenre     String?
+  topArtistId  String?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, recordedDate])
+  @@index([recordedDate])
+  @@index([userId])
+  @@map("daily_listening_stats")
+}
+
+model WeeklyListeningStats {
+  id          String   @id @default(uuid())
+  userId      String
+  weekStart   DateTime @db.Date
+  totalMins   Float    @default(0)
+  songsPlayed Int      @default(0)
+  topGenre    String?
+  topArtistId String?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekStart])
+  @@index([weekStart])
+  @@map("weekly_listening_stats")
+}
+
+model MonthlyListeningStats {
+  id          String   @id @default(uuid())
+  userId      String
+  monthStart  DateTime @db.Date
+  totalMins   Float    @default(0)
+  songsPlayed Int      @default(0)
+  topGenre    String?
+  topArtistId String?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, monthStart])
+  @@index([monthStart])
+  @@map("monthly_listening_stats")
+}
+
+model TopArtist {
+  id         String   @id @default(uuid())
+  artistId   String
+  period     String
+  rank       Int
+  playCount  BigInt
+  recordedAt DateTime @default(now())
+
+  @@index([period, rank])
+  @@index([recordedAt])
+  @@map("top_artists")
+}
+
+model TopSong {
+  id         String   @id @default(uuid())
+  songId     String
+  period     String
+  rank       Int
+  playCount  BigInt
+  recordedAt DateTime @default(now())
+
+  @@index([period, rank])
+  @@index([recordedAt])
+  @@map("top_songs")
+}
+
+model GenreStatistic {
+  id          String   @id @default(uuid())
+  genreId     String
+  period      String
+  streamCount BigInt   @default(0)
+  uniqueUsers Int      @default(0)
+  recordedAt  DateTime @default(now())
+
+  @@index([genreId, period])
+  @@map("genre_statistics")
+}
+
+// ============================================================
+// MODULE 15: ADMIN
+// ============================================================
+
+model Report {
+  id          String       @id @default(uuid())
+  targetType  String
+  targetId    String
+  reason      ReportReason
+  description String?
+  status      ReportStatus @default(PENDING)
+  reviewedBy  String?
+  resolvedAt  DateTime?
+  createdAt   DateTime     @default(now())
+
+  userReports UserReport[]
+
+  @@index([status])
+  @@index([targetType, targetId])
+  @@map("reports")
+}
+
+model UserReport {
+  reportId   String
+  reporterId String
+  reportedId String
+
+  report   Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  reporter User   @relation("ReportingUser", fields: [reporterId], references: [id], onDelete: Cascade)
+  reported User   @relation("ReportedUser", fields: [reportedId], references: [id], onDelete: Cascade)
+
+  @@id([reportId, reporterId])
+  @@map("user_reports")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  action    String
+  tableName String?
+  recordId  String?
+  oldData   Json?
+  newData   Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([tableName, recordId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model SystemSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+model ContentModeration {
+  id          String   @id @default(uuid())
+  targetType  String
+  targetId    String
+  action      String
+  reason      String?
+  moderatorId String?
+  createdAt   DateTime @default(now())
+
+  @@index([targetType, targetId])
+  @@index([createdAt])
+  @@map("content_moderation")
+}
+
+// ============================================================
+// MODULE 16: PROFILE EXTENSIONS
+// ============================================================
+
+model PrivacySettings {
+  userId                String   @id
+  profileVisibility     String   @default("PUBLIC") // PUBLIC, FRIENDS, PRIVATE
+  showListeningActivity Boolean  @default(true)
+  showOnlineStatus      Boolean  @default(true)
+  allowFriendRequests   Boolean  @default(true)
+  allowMessages         String   @default("EVERYONE") // EVERYONE, FRIENDS, NONE
+  allowVoiceCalls       String   @default("FRIENDS")
+  allowRoomInvites      String   @default("EVERYONE")
+  updatedAt             DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("privacy_settings")
+}
+
+model UserStatistics {
+  userId             String   @id
+  songsPlayed        BigInt   @default(0)
+  musicVideosWatched BigInt   @default(0)
+  totalListeningSecs BigInt   @default(0)
+  playlistsCreated   Int      @default(0)
+  roomsJoined        Int      @default(0)
+  voiceChatSecs      BigInt   @default(0)
+  emojiReactionsSent BigInt   @default(0)
+  messagesSent       BigInt   @default(0)
+  aiRecsUsed         Int      @default(0)
+  updatedAt          DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_statistics")
+}
+
+model Achievement {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  description String
+  iconUrl     String?
+  points      Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  userAchievements UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  userId        String
+  achievementId String
+  earnedAt      DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@id([userId, achievementId])
+  @@map("user_achievements")
+}
+
+// ============================================================
+// MODULE 17: SETTINGS
+// ============================================================
+
+model PlaybackSettings {
+  userId               String   @id
+  autoPlay             Boolean  @default(true)
+  crossfadeMs          Int      @default(0)
+  gaplessPlayback      Boolean  @default(true)
+  normalizeVolume      Boolean  @default(true)
+  autoplaySimilarSongs Boolean  @default(true)
+  repeatMode           String   @default("OFF") // OFF, ALL, ONE
+  shuffleMode          Boolean  @default(false)
+  defaultVolume        Int      @default(80)
+  videoAutoPlay        Boolean  @default(true)
+  lyricsDisplay        Boolean  @default(true)
+  updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("playback_settings")
+}
+
+model AudioSettings {
+  userId           String   @id
+  streamingQuality String   @default("HIGH") // LOW, MEDIUM, HIGH, LOSSLESS
+  downloadQuality  String   @default("HIGH")
+  equalizerPreset  String   @default("NORMAL")
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("audio_settings")
+}
+
+model VoiceSettings {
+  userId              String   @id
+  microphoneId        String?
+  speakerId           String?
+  noiseCancellation   Boolean  @default(true)
+  echoCancellation    Boolean  @default(true)
+  pushToTalk          Boolean  @default(false)
+  autoGainControl     Boolean  @default(true)
+  voiceActivityDetect Boolean  @default(true)
+  updatedAt           DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("voice_settings")
+}
+
+model ChatSettings {
+  userId            String   @id
+  readReceipts      Boolean  @default(true)
+  typingIndicator   Boolean  @default(true)
+  messagePreview    Boolean  @default(true)
+  autoDownloadMedia Boolean  @default(true)
+  chatBackground    String?
+  emojiSuggestions  Boolean  @default(true)
+  gifSupport        Boolean  @default(true)
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("chat_settings")
+}
+
+model ThemeSettings {
+  userId           String   @id
+  themeMode        String   @default("SYSTEM") // LIGHT, DARK, SYSTEM
+  accentColor      String   @default("#1DB954")
+  fontSize         String   @default("MEDIUM") // SMALL, MEDIUM, LARGE
+  compactMode      Boolean  @default(false)
+  sidebarPosition  String   @default("LEFT") // LEFT, RIGHT
+  enableAnimations Boolean  @default(true)
+  reduceMotion     Boolean  @default(false)
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("theme_settings")
+}
+
+model LanguageSettings {
+  userId          String   @id
+  language        String   @default("en-US")
+  country         String   @default("US")
+  timeZone        String   @default("UTC")
+  dateFormat      String   @default("MM/DD/YYYY")
+  timeFormat      String   @default("12H") // 12H, 24H
+  regionalContent Boolean  @default(true)
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("language_settings")
+}
+
+// ============================================================
+// MODULE 18: COMMUNITY
+// ============================================================
+
+model CommunityPost {
+  id               String    @id @default(uuid())
+  userId           String
+  fanClubId        String?
+  parentId         String?
+  sharedSongId     String?
+  sharedPlaylistId String?
+  content          String
+  tags             String[]
+  deletedAt        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user           User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reactions      CommunityPostReaction[]
+  parent         CommunityPost?          @relation("PostComments", fields: [parentId], references: [id], onDelete: Cascade)
+  comments       CommunityPost[]         @relation("PostComments")
+  fanClub        FanClub?                @relation(fields: [fanClubId], references: [id], onDelete: Cascade)
+  sharedSong     Song?                   @relation(fields: [sharedSongId], references: [id], onDelete: SetNull)
+  sharedPlaylist Playlist?               @relation(fields: [sharedPlaylistId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([fanClubId])
+  @@index([parentId])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@map("community_posts")
+}
+
+model CommunityPostReaction {
+  id        String        @id @default(uuid())
+  postId    String
+  userId    String
+  emoji     ReactionEmoji
+  createdAt DateTime      @default(now())
+
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId, emoji])
+  @@map("community_post_reactions")
+}
+
+model FanClub {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  ownerId     String
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  owner   User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  members FanClubMember[]
+  posts   CommunityPost[]
+
+  @@index([ownerId])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@map("fan_clubs")
+}
+
+model FanClubMember {
+  fanClubId String
+  userId    String
+  joinedAt  DateTime @default(now())
+
+  fanClub FanClub @relation(fields: [fanClubId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([fanClubId, userId])
+  @@index([userId])
+  @@index([fanClubId])
+  @@map("fan_club_members")
+}
+
+model CommunityPoll {
+  id        String    @id @default(uuid())
+  question  String
+  creatorId String
+  expiresAt DateTime?
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  creator   User                    @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  options   CommunityPollOption[]
+  reactions CommunityPollReaction[]
+
+  @@index([creatorId])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@map("community_polls")
+}
+
+model CommunityPollOption {
+  id     String @id @default(uuid())
+  pollId String
+  text   String
+
+  poll  CommunityPoll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes CommunityPollVote[]
+
+  @@index([pollId])
+  @@map("community_poll_options")
+}
+
+model CommunityPollVote {
+  id        String   @id @default(uuid())
+  optionId  String
+  userId    String
+  createdAt DateTime @default(now())
+
+  option CommunityPollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user   User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([optionId, userId])
+  @@index([optionId])
+  @@index([userId])
+  @@map("community_poll_votes")
+}
+
+model CommunityPollReaction {
+  id        String        @id @default(uuid())
+  pollId    String
+  userId    String
+  emoji     ReactionEmoji
+  createdAt DateTime      @default(now())
+
+  poll CommunityPoll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, userId])
+  @@index([pollId, emoji])
+  @@map("community_poll_reactions")
+}
