@@ -11,7 +11,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // ============================================================
@@ -172,6 +171,8 @@ model User {
   userReports              UserReport[]            @relation("ReportedUser")
   reportsMade              UserReport[]            @relation("ReportingUser")
   auditLogs                AuditLog[]
+  communityPosts           CommunityPost[]
+  communityPostReactions   CommunityPostReaction[]
 
   @@index([email])
   @@index([username])
@@ -648,6 +649,48 @@ model UserActivity {
   @@index([userId])
   @@index([createdAt])
   @@map("user_activity")
+}
+
+// ============================================================
+// MODULE: COMMUNITY
+// ============================================================
+
+model CommunityPost {
+  id               String    @id @default(uuid())
+  userId           String
+  content          String
+  tags             String[]  @default([])
+  parentId         String?
+  fanClubId        String?
+  sharedSongId     String?
+  sharedPlaylistId String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user      User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent    CommunityPost?          @relation("PostReplies", fields: [parentId], references: [id], onDelete: SetNull)
+  replies   CommunityPost[]         @relation("PostReplies")
+  reactions CommunityPostReaction[]
+
+  @@index([userId])
+  @@index([parentId])
+  @@index([createdAt])
+  @@map("community_posts")
+}
+
+model CommunityPostReaction {
+  id        String        @id @default(uuid())
+  postId    String
+  userId    String
+  emoji     ReactionEmoji
+  createdAt DateTime      @default(now())
+
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@map("community_post_reactions")
 }
 
 // ============================================================

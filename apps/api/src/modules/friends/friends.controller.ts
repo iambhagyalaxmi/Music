@@ -218,7 +218,7 @@ friendsRoutes.get('/', requireAuth, async (req: AuthenticatedRequest, res: Respo
     });
 
     // Map active sessions to online status
-    const mappedFriends = friends.map(f => {
+    const mappedFriends = friends.map((f: any) => {
       const isOnline = f.friend.activeSessions && f.friend.activeSessions.length > 0;
       return {
         id: f.friend.id,
@@ -311,7 +311,7 @@ friendsRoutes.get('/search', requireAuth, async (req: AuthenticatedRequest, res:
       take: 20
     });
 
-    const mappedUsers = users.map(u => {
+    const mappedUsers = users.map((u: any) => {
       let status = 'NONE';
       if (u.friends.length > 0) status = 'FRIENDS';
       else if (u.receivedFriendRequests.length > 0) status = 'REQUEST_SENT';
@@ -345,7 +345,7 @@ friendsRoutes.get('/suggestions', requireAuth, async (req: AuthenticatedRequest,
       select: { followingId: true }
     });
     
-    const followingIds = following.map(f => f.followingId);
+    const followingIds = following.map((f: any) => f.followingId);
     
     const suggestions = await db.user.findMany({
       where: {
@@ -380,7 +380,7 @@ friendsRoutes.get('/mutual/:targetUserId', requireAuth, async (req: Authenticate
       where: { userId },
       select: { friendId: true }
     });
-    const myFriendIds = myFriends.map(f => f.friendId);
+    const myFriendIds = myFriends.map((f: any) => f.friendId);
 
     const mutuals = await db.friend.findMany({
       where: {
@@ -394,7 +394,7 @@ friendsRoutes.get('/mutual/:targetUserId', requireAuth, async (req: Authenticate
       }
     });
 
-    res.json(mutuals.map(m => m.friend));
+    res.json(mutuals.map((m: any) => m.friend));
   } catch (error) {
     console.error('Mutual Friends Error:', error);
     res.status(500).json({ error: 'Failed to fetch mutual friends.' });

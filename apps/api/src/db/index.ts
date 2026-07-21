@@ -21,7 +21,8 @@ const createExtendedClient = () => {
   return client.$extends({
     query: {
       $allModels: {
-        async $allOperations({ model, operation, args, query }) {
+        async $allOperations(params: { model: string; operation: string; args: any; query: (args: any) => Promise<any> }) {
+          const { model, operation, args, query } = params;
           const softDeleteModels = [
             'User', 'Artist', 'Album', 'Song', 'Playlist', 'MusicVideo'
           ];

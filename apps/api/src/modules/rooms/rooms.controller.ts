@@ -19,11 +19,11 @@ router.get('/', async (req: Request, res: Response) => {
     });
     
     // Map them to match expected room frontend format
-    const formattedRooms = rooms.map(conv => ({
+    const formattedRooms = rooms.map((conv: any) => ({
       id: conv.name || conv.id, // we use name as roomId for realtime socket
       name: conv.name || 'Untitled Room',
       members: conv.members.length,
-      host: conv.members.find(m => m.isAdmin)?.user?.username || 'System',
+      host: conv.members.find((m: any) => m.isAdmin)?.user?.username || 'System',
       isPublic: true,
       nowPlaying: null // Managed by realtime socket in memory
     }));
@@ -101,7 +101,7 @@ router.get('/:id', async (req: Request, res: Response) => {
     res.json({
       id: room.name,
       name: room.name,
-      members: room.members.map(m => ({
+      members: room.members.map((m: any) => ({
         id: m.userId,
         username: m.user.username,
         isAdmin: m.isAdmin

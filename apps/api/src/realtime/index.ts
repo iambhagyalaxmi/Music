@@ -45,13 +45,17 @@ const getSenderUser = async (username: string) => {
   return user;
 };
 
-// ── Express Router ─────────────────────────────────────────────────────────
+// Helper to safely extract roomId as string from Express 5 params
+const getRoomId = (req: Request): string => {
+  const roomId = req.params.roomId;
+  return Array.isArray(roomId) ? roomId[0] : roomId;
+};
 
 const router = Router();
 
 // GET /api/realtime/room/:roomId/state — Fetch initial room state
 router.get('/room/:roomId/state', async (req: Request, res: Response) => {
-  const { roomId } = req.params;
+  const roomId = getRoomId(req);
 
   try {
     // Initialize playback state if not present
@@ -106,7 +110,7 @@ router.get('/room/:roomId/state', async (req: Request, res: Response) => {
 
 // POST /api/realtime/room/:roomId/queue/add
 router.post('/room/:roomId/queue/add', async (req: Request, res: Response) => {
-  const { roomId } = req.params;
+  const roomId = getRoomId(req);
   const { trackId, title, artist, duration, thumbnail } = req.body;
 
   if (!mockPlaybackState[roomId]) {
@@ -145,7 +149,7 @@ router.post('/room/:roomId/queue/add', async (req: Request, res: Response) => {
 
 // POST /api/realtime/room/:roomId/playback/load
 router.post('/room/:roomId/playback/load', async (req: Request, res: Response) => {
-  const { roomId } = req.params;
+  const roomId = getRoomId(req);
   const { trackId } = req.body;
 
   mockPlaybackState[roomId] = { trackId, isPlaying: true, positionMs: 0, updatedAt: Date.now() };
@@ -156,7 +160,7 @@ router.post('/room/:roomId/playback/load', async (req: Request, res: Response) =
 
 // POST /api/realtime/room/:roomId/playback/play
 router.post('/room/:roomId/playback/play', async (req: Request, res: Response) => {
-  const { roomId } = req.params;
+  const roomId = getRoomId(req);
   const { positionMs } = req.body;
 
   if (!mockPlaybackState[roomId]) {
@@ -173,7 +177,7 @@ router.post('/room/:roomId/playback/play', async (req: Request, res: Response) =
 
 // POST /api/realtime/room/:roomId/playback/pause
 router.post('/room/:roomId/playback/pause', async (req: Request, res: Response) => {
-  const { roomId } = req.params;
+  const roomId = getRoomId(req);
   const { positionMs } = req.body;
 
   if (!mockPlaybackState[roomId]) {
@@ -190,7 +194,7 @@ router.post('/room/:roomId/playback/pause', async (req: Request, res: Response) 
 
 // POST /api/realtime/room/:roomId/playback/seek
 router.post('/room/:roomId/playback/seek', async (req: Request, res: Response) => {
-  const { roomId } = req.params;
+  const roomId = getRoomId(req);
   const { positionMs } = req.body;
 
   if (!mockPlaybackState[roomId]) {
@@ -206,7 +210,7 @@ router.post('/room/:roomId/playback/seek', async (req: Request, res: Response) =
 
 // POST /api/realtime/room/:roomId/chat/send
 router.post('/room/:roomId/chat/send', async (req: Request, res: Response) => {
-  const { roomId } = req.params;
+  const roomId = getRoomId(req);
   const { sender, text } = req.body;
 
   try {
@@ -242,7 +246,7 @@ router.post('/room/:roomId/chat/send', async (req: Request, res: Response) => {
 
 // POST /api/realtime/room/:roomId/chat/edit
 router.post('/room/:roomId/chat/edit', async (req: Request, res: Response) => {
-  const { roomId } = req.params;
+  const roomId = getRoomId(req);
   const { id, text } = req.body;
 
   try {
@@ -269,7 +273,7 @@ router.post('/room/:roomId/chat/edit', async (req: Request, res: Response) => {
 
 // POST /api/realtime/room/:roomId/chat/delete
 router.post('/room/:roomId/chat/delete', async (req: Request, res: Response) => {
-  const { roomId } = req.params;
+  const roomId = getRoomId(req);
   const { id } = req.body;
 
   try {
@@ -284,7 +288,7 @@ router.post('/room/:roomId/chat/delete', async (req: Request, res: Response) => 
 
 // POST /api/realtime/room/:roomId/chat/react
 router.post('/room/:roomId/chat/react', async (req: Request, res: Response) => {
-  const { roomId } = req.params;
+  const roomId = getRoomId(req);
   const { emoji, sender } = req.body;
 
   try {
@@ -301,7 +305,7 @@ router.post('/room/:roomId/chat/react', async (req: Request, res: Response) => {
 
 // POST /api/realtime/room/:roomId/song/react
 router.post('/room/:roomId/song/react', async (req: Request, res: Response) => {
-  const { roomId } = req.params;
+  const roomId = getRoomId(req);
   const { emoji, sender } = req.body;
 
   await pusher.trigger(`room-${roomId}`, 'song-reaction-received', {
