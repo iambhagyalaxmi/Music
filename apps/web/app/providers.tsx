@@ -15,7 +15,8 @@ declare global {
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
-  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || 'mock-client-id';
+  // Next.js requires NEXT_PUBLIC_ prefix for browser env vars. Fall back to the actual ID so Vercel deployments work seamlessly.
+  const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '1088837356107-4lf25tua3k4b5np8cpo5bccsc41r0b62.apps.googleusercontent.com';
   const [queryClient] = useState(() => {
     const client = new QueryClient({
       defaultOptions: {
