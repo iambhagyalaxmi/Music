@@ -9,7 +9,7 @@ import { API_URL } from '../../lib/api';
 
 export default function Dashboard() {
   const router = useRouter();
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, token } = useAuth();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -85,30 +85,68 @@ export default function Dashboard() {
     );
   }
 
-  // MOCK DATA FOR UI
-  const continueListening = [
-    { id: 1, title: 'Chill Vibes Lounge', users: 12, image: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&q=80' },
-    { id: 2, title: 'Lofi Focus', users: 45, image: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?w=400&q=80' },
-    { id: 3, title: 'Synthwave Night', users: 8, image: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=400&q=80' },
-  ];
-
-  const recentlyPlayed = [
-    { id: 1, title: 'Blinding Lights', artist: 'The Weeknd', time: '2 hours ago', cover: 'https://upload.wikimedia.org/wikipedia/en/e/e6/The_Weeknd_-_Blinding_Lights.png' },
-    { id: 2, title: 'Starboy', artist: 'The Weeknd', time: '5 hours ago', cover: 'https://upload.wikimedia.org/wikipedia/en/3/39/The_Weeknd_-_Starboy.png' },
-    { id: 3, title: 'Midnight City', artist: 'M83', time: 'Yesterday', cover: 'https://upload.wikimedia.org/wikipedia/en/b/b5/M83_-_Midnight_City.jpg' },
-  ];
-
+  const [continueListening, setContinueListening] = useState<any[]>([]);
+  const [recentlyPlayed, setRecentlyPlayed] = useState<any[]>([]);
+  const [friendsActivity, setFriendsActivity] = useState<any[]>([]);
+  
+  // Trending can remain static/mock since it's global recommendations
   const trending = [
     { id: 1, title: 'Global Top 50', type: 'Playlist', cover: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&q=80' },
     { id: 2, title: 'Viral Hits', type: 'Playlist', cover: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&q=80' },
   ];
 
-  const friendsActivity = [
-    { id: 1, name: 'Alex Johnson', listeningTo: 'Daft Punk - Get Lucky', status: 'In a room', avatar: 'https://i.pravatar.cc/150?u=alex' },
-    { id: 2, name: 'Sarah Miller', listeningTo: 'Taylor Swift - Cruel Summer', status: 'Listening solo', avatar: 'https://i.pravatar.cc/150?u=sarah' },
-    { id: 3, name: 'David Chen', listeningTo: 'Hans Zimmer - Time', status: 'In a room', avatar: 'https://i.pravatar.cc/150?u=david' },
-    { id: 4, name: 'Emily Rose', listeningTo: 'Offline', status: 'Offline', avatar: 'https://i.pravatar.cc/150?u=emily' },
-  ];
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchDashboardData = async () => {
+      try {
+        const headers = { Authorization: `Bearer ${token}` };
+
+        // 1. Fetch Active Rooms (Continue Listening)
+        const roomsRes = await fetch(`${API_URL}/rooms`, { headers });
+        if (roomsRes.ok) {
+          const roomsData = await roomsRes.json();
+          setContinueListening(roomsData.map((r: any) => ({
+            id: r.id,
+            title: r.name,
+            users: r.members || 1,
+            image: `https://images.unsplash.com/photo-${1511671782779 + Math.floor(Math.random() * 1000)}?w=400&q=80` // random cover
+          })));
+        }
+
+        // 2. Fetch Recently Played (History)
+        const historyRes = await fetch(`${API_URL}/api/ytmusic/history`, { headers });
+        if (historyRes.ok) {
+          const historyData = await historyRes.json();
+          // Map UserActivity metadata (videoId) to UI format
+          setRecentlyPlayed((historyData.items || []).map((item: any, i: number) => ({
+            id: item.id || i,
+            title: `Track ${item.metadata?.videoId?.substring(0, 5) || 'Unknown'}`,
+            artist: 'YouTube Music',
+            time: new Date(item.createdAt).toLocaleDateString(),
+            cover: `https://img.youtube.com/vi/${item.metadata?.videoId}/default.jpg`
+          })));
+        }
+
+        // 3. Fetch Friends Activity
+        const friendsRes = await fetch(`${API_URL}/api/community-social/friends-activity`, { headers });
+        if (friendsRes.ok) {
+          const friendsData = await friendsRes.json();
+          setFriendsActivity(friendsData.map((f: any) => ({
+            id: f.user.id,
+            name: f.user.displayName || f.user.username,
+            listeningTo: f.currentlyPlaying ? `${f.currentlyPlaying.title}` : (f.isOnline ? 'Online' : 'Offline'),
+            status: f.isOnline ? (f.currentlyPlaying ? 'Listening solo' : 'In a room') : 'Offline',
+            avatar: f.user.avatarUrl || `https://ui-avatars.com/api/?name=${f.user.displayName || f.user.username}&background=random`
+          })));
+        }
+      } catch (err) {
+        console.error('Failed to fetch dashboard data', err);
+      }
+    };
+
+    fetchDashboardData();
+  }, [token]);
 
   return (
     <SubscriptionGuard>

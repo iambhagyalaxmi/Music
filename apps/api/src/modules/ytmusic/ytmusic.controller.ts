@@ -78,4 +78,23 @@ router.post('/watch', requireAuth, async (req: Request, res: Response) => {
   }
 });
 
+router.get('/history', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthenticatedRequest).user!.userId;
+    const history = await db.userActivity.findMany({
+      where: { userId, activityType: 'VIDEO_WATCHED' },
+      orderBy: { createdAt: 'desc' },
+      take: 10
+    });
+
+    // We only have videoId in metadata. We'd ideally fetch details from YTMusic,
+    // but for now we return the raw IDs to avoid hitting API rate limits.
+    // The frontend can fetch metadata if needed, or we just rely on what's there.
+    res.json({ items: history });
+  } catch (error) {
+    console.error('Failed to fetch history:', error);
+    res.status(500).json({ error: 'Failed to fetch history' });
+  }
+});
+
 export const ytmusicRoutes = router;
