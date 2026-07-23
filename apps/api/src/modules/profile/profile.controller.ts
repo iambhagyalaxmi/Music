@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { db } from '../../db';
 import { requireAuth, AuthenticatedRequest } from '../../middlewares/auth.middleware';
+import { getProfileStatistics } from './profile.service';
 
 export const profileRoutes = Router();
 
@@ -12,13 +13,11 @@ profileRoutes.get('/', requireAuth, async (req, res) => {
       where: { id: userId },
       include: {
         profile: true,
-        userStatistics: true,
         privacySettings: true,
         _count: {
           select: {
             followers: true,
             following: true,
-            friends: true,
           }
         }
       }
@@ -26,17 +25,28 @@ profileRoutes.get('/', requireAuth, async (req, res) => {
     
     if (!user) return res.status(404).json({ error: 'User not found' });
     
+    const baseStats = await getProfileStatistics(userId) || {};
+    
     res.json({
       id: user.id,
       email: user.email,
       username: user.username,
       role: user.role,
       profile: user.profile,
-      stats: user.userStatistics,
+      stats: {
+        ...baseStats,
+        // Legacy mappings for existing UI
+        musicVideosWatched: (baseStats as any).videosWatched,
+        totalListeningSecs: (baseStats as any).listeningTime,
+        totalPlaylists: (baseStats as any).playlistCount,
+        friendsCount: (baseStats as any).friends,
+        avgDailyListening: (baseStats as any).averageDailyListening,
+        consecutiveDays: (baseStats as any).streak, // Map streak to consecutiveDays for UI
+      },
       privacy: user.privacySettings,
       followersCount: user._count.followers,
       followingCount: user._count.following,
-      friendsCount: user._count.friends,
+      friendsCount: (baseStats as any).friends,
     });
   } catch (error) {
     console.error('Error fetching profile:', error);
@@ -47,10 +57,19 @@ profileRoutes.get('/', requireAuth, async (req, res) => {
 // GET /api/profile/stats
 profileRoutes.get('/stats', requireAuth, async (req, res) => {
   try {
-    const stats = await db.userStatistics.findUnique({
-      where: { userId: (req as AuthenticatedRequest).user!.userId }
+    const userId = (req as AuthenticatedRequest).user!.userId;
+    const baseStats = await getProfileStatistics(userId) || {};
+    
+    res.json({
+      ...baseStats,
+      // Legacy mappings for existing UI
+      musicVideosWatched: (baseStats as any).videosWatched,
+      totalListeningSecs: (baseStats as any).listeningTime,
+      totalPlaylists: (baseStats as any).playlistCount,
+      friendsCount: (baseStats as any).friends,
+      avgDailyListening: (baseStats as any).averageDailyListening,
+      consecutiveDays: (baseStats as any).streak,
     });
-    res.json(stats || {});
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch stats' });
   }
@@ -112,7 +131,6 @@ profileRoutes.get('/:username', async (req, res) => {
       where: { username: req.params.username },
       include: {
         profile: true,
-        userStatistics: true,
         _count: { select: { followers: true, following: true } }
       }
     });
@@ -121,11 +139,22 @@ profileRoutes.get('/:username', async (req, res) => {
       return res.status(404).json({ error: 'Profile not found' });
     }
     
+    const baseStats = await getProfileStatistics(user.id) || {};
+    
     res.json({
       id: user.id,
       username: user.username,
       profile: user.profile,
-      stats: user.userStatistics,
+      stats: {
+        ...baseStats,
+        // Legacy mappings for existing UI
+        musicVideosWatched: (baseStats as any).videosWatched,
+        totalListeningSecs: (baseStats as any).listeningTime,
+        totalPlaylists: (baseStats as any).playlistCount,
+        friendsCount: (baseStats as any).friends,
+        avgDailyListening: (baseStats as any).averageDailyListening,
+        consecutiveDays: (baseStats as any).streak,
+      },
       followersCount: user._count.followers,
       followingCount: user._count.following,
     });

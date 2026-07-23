@@ -47,6 +47,11 @@ app.use('/api/friends', friendsRoutes);
 app.use('/api/realtime', realtimeRoutes);
 app.use('/api/cron', cronRoutes);
 
+// 🚀 Health Check & Root Route 🚀
+app.get('/', (_req, res) => {
+  res.json({ status: 'ok', message: 'SoundSphere API is running!', timestamp: new Date().toISOString() });
+});
+
 // ── Health Check ───────────────────────────────────────────────────────────
 app.get('/health', async (_req, res) => {
   try {

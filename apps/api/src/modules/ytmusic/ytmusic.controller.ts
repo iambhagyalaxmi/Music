@@ -1,5 +1,7 @@
 import { Router, Request, Response } from 'express';
 import YTMusic from 'ytmusic-api';
+import { db } from '../../db';
+import { requireAuth, AuthenticatedRequest } from '../../middlewares/auth.middleware';
 
 const router = Router();
 const ytmusic = new YTMusic();
@@ -49,6 +51,30 @@ router.get('/search', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('YTMusic Search Error:', error);
     res.status(500).json({ error: 'Failed to search YouTube Music' });
+  }
+});
+
+router.post('/watch', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthenticatedRequest).user!.userId;
+    const { videoId } = req.body;
+
+    if (!videoId) {
+      return res.status(400).json({ error: 'videoId is required' });
+    }
+
+    await db.userActivity.create({
+      data: {
+        userId,
+        activityType: 'VIDEO_WATCHED',
+        metadata: { videoId }
+      }
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Failed to record video watch:', error);
+    res.status(500).json({ error: 'Failed to record video watch' });
   }
 });
 
