@@ -28,6 +28,10 @@ export default function FriendsPage() {
   const [openedPlaylistId, setOpenedPlaylistId] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchResultUsers, setSearchResultUsers] = useState<any[]>([]);
+  const [isSearchingUsers, setIsSearchingUsers] = useState(false);
+  const [sentRequests, setSentRequests] = useState<Record<string, boolean>>({});
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const [stats, setStats] = useState({
@@ -80,6 +84,59 @@ export default function FriendsPage() {
   const showToast = (message: string) => {
     setToastMessage(message);
     setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+    
+    if (val.trim().length >= 2) {
+      setIsSearchingUsers(true);
+      searchTimeoutRef.current = setTimeout(async () => {
+        try {
+          const token = localStorage.getItem('soundsphere_token');
+          const res = await fetch(`${API_URL}/api/friends/search?q=${encodeURIComponent(val)}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setSearchResultUsers(data);
+          } else {
+            setSearchResultUsers([]);
+          }
+        } catch (err) {
+          console.error(err);
+          setSearchResultUsers([]);
+        } finally {
+          setIsSearchingUsers(false);
+        }
+      }, 400);
+    } else {
+      setSearchResultUsers([]);
+      setIsSearchingUsers(false);
+    }
+  };
+
+  const handleSendFriendRequest = async (userId: string, username: string) => {
+    try {
+      const token = localStorage.getItem('soundsphere_token');
+      const res = await fetch(`${API_URL}/api/friends/request/${userId}`, { 
+        method: 'POST', 
+        headers: { Authorization: `Bearer ${token}` } 
+      });
+      if (res.ok) {
+        showToast(`Friend request sent to ${username}!`);
+        setSentRequests(prev => ({ ...prev, [userId]: true }));
+        fetchFriendsData();
+      } else {
+        const error = await res.json();
+        showToast(error.error || 'Failed to send request');
+      }
+    } catch (e) {
+      showToast('An error occurred');
+    }
   };
 
   const fetchFriendsData = async () => {
@@ -178,7 +235,7 @@ export default function FriendsPage() {
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
               <li>
                 <Link href="/dashboard" style={{ display: 'block', padding: 'var(--spacing-3) var(--spacing-4)', borderRadius: 'var(--radius-md)', color: 'var(--color-text-secondary)', textDecoration: 'none', fontWeight: 'bold', transition: 'background-color 0.2s, color 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.color = 'var(--color-text-primary)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--color-text-secondary)'; }}>
-                  Music
+                  Home
                 </Link>
               </li>
               <li>
@@ -319,7 +376,9 @@ export default function FriendsPage() {
                     onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
                     onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                     onClick={async () => {
-                      if (searchQuery.trim()) {
+                      if (searchResultUsers.length > 0) {
+                        handleSendFriendRequest(searchResultUsers[0].id, searchResultUsers[0].username);
+                      } else if (searchQuery.trim().length >= 2) {
                         try {
                           const token = localStorage.getItem('soundsphere_token');
                           const headers = { Authorization: `Bearer ${token}` };
@@ -327,15 +386,12 @@ export default function FriendsPage() {
                           if (res.ok) {
                             const users = await res.json();
                             if (users.length > 0) {
-                              await fetch(`${API_URL}/api/friends/request/${users[0].id}`, { method: 'POST', headers });
-                              showToast(`Friend request sent to ${users[0].username}!`);
-                              fetchFriendsData();
+                              handleSendFriendRequest(users[0].id, users[0].username);
                             } else {
                               showToast('User not found.');
                             }
                           }
                         } catch (e) {}
-                        setSearchQuery('');
                       } else {
                         searchInputRef.current?.focus();
                       }
@@ -366,32 +422,67 @@ export default function FriendsPage() {
                   ref={searchInputRef}
                   type="text" 
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={handleSearchChange}
                   placeholder="Search friends by Name, Username, or Email..." 
                   style={{ width: '100%', padding: '16px 16px 16px 48px', backgroundColor: '#09090B', border: '1px solid var(--color-border)', borderRadius: '12px', color: 'var(--color-text-primary)', fontSize: 'var(--text-base)', outline: 'none', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)' }}
                   onFocus={(e) => e.target.style.borderColor = 'var(--color-accent-pink)'}
                   onBlur={(e) => e.target.style.borderColor = 'var(--color-border)'}
                   onKeyDown={async (e) => {
-                    if (e.key === 'Enter' && searchQuery.trim()) {
-                      try {
-                        const token = localStorage.getItem('soundsphere_token');
-                        const headers = { Authorization: `Bearer ${token}` };
-                        const res = await fetch(`${API_URL}/api/friends/search?q=${encodeURIComponent(searchQuery)}`, { headers });
-                        if (res.ok) {
-                          const users = await res.json();
-                          if (users.length > 0) {
-                            await fetch(`${API_URL}/api/friends/request/${users[0].id}`, { method: 'POST', headers });
-                            showToast(`Friend request sent to ${users[0].username}!`);
-                            fetchFriendsData();
-                          } else {
-                            showToast('User not found.');
+                    if (e.key === 'Enter') {
+                      if (searchResultUsers.length > 0) {
+                        handleSendFriendRequest(searchResultUsers[0].id, searchResultUsers[0].username);
+                      } else if (searchQuery.trim().length >= 2) {
+                        try {
+                          const token = localStorage.getItem('soundsphere_token');
+                          const headers = { Authorization: `Bearer ${token}` };
+                          const res = await fetch(`${API_URL}/api/friends/search?q=${encodeURIComponent(searchQuery)}`, { headers });
+                          if (res.ok) {
+                            const users = await res.json();
+                            if (users.length > 0) {
+                              handleSendFriendRequest(users[0].id, users[0].username);
+                            } else {
+                              showToast('User not found.');
+                            }
                           }
-                        }
-                      } catch (e) {}
-                      setSearchQuery('');
+                        } catch (err) {}
+                      }
                     }
                   }}
                 />
+                
+                {/* Search Results Dropdown */}
+                {(searchQuery.trim().length >= 2) && (
+                  <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: '8px', backgroundColor: 'var(--color-surface)', borderRadius: '12px', border: '1px solid var(--color-border)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', zIndex: 100, overflow: 'hidden' }}>
+                    {isSearchingUsers ? (
+                      <div style={{ padding: '16px', textAlign: 'center', color: 'var(--color-text-secondary)' }}>Searching...</div>
+                    ) : searchResultUsers.length > 0 ? (
+                      <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                        {searchResultUsers.map(user => (
+                          <div key={user.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                              <img src={user.profile?.avatarUrl || `https://i.pravatar.cc/150?u=${user.username}`} alt={user.username} style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
+                              <div>
+                                <div style={{ fontWeight: 'bold', fontSize: 'var(--text-base)', color: 'var(--color-text-primary)' }}>{user.profile?.displayName || user.username}</div>
+                                <div style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)' }}>@{user.username}</div>
+                              </div>
+                            </div>
+                            <button
+                              disabled={sentRequests[user.id]}
+                              onClick={() => handleSendFriendRequest(user.id, user.username)}
+                              style={{ padding: '6px 12px', backgroundColor: sentRequests[user.id] ? 'rgba(255,255,255,0.1)' : 'var(--color-accent-pink)', color: sentRequests[user.id] ? 'var(--color-text-secondary)' : '#fff', borderRadius: '8px', border: 'none', fontSize: 'var(--text-sm)', fontWeight: 'bold', cursor: sentRequests[user.id] ? 'default' : 'pointer', transition: 'all 0.2s' }}
+                              onMouseEnter={(e) => { if(!sentRequests[user.id]) e.currentTarget.style.transform = 'scale(1.05)' }}
+                              onMouseLeave={(e) => { if(!sentRequests[user.id]) e.currentTarget.style.transform = 'scale(1)' }}
+                            >
+                              {sentRequests[user.id] ? 'Request Sent' : 'Add Friend'}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div style={{ padding: '16px', textAlign: 'center', color: 'var(--color-text-secondary)' }}>No users found.</div>
+                    )}
+                  </div>
+                )}
               </div>
 
             </div>

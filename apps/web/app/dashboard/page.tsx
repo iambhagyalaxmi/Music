@@ -127,6 +127,7 @@ export default function Dashboard() {
           // The backend now returns enriched data (title, artist, cover)
           setRecentlyPlayed((historyData.items || []).map((item: any) => ({
             id: item.id,
+            trackId: item.metadata?.videoId || item.videoId,
             title: item.title,
             artist: item.artist,
             time: new Date(item.createdAt).toLocaleDateString(),
@@ -423,7 +424,18 @@ export default function Dashboard() {
               <h2 style={{ fontSize: 'var(--text-h3)', marginBottom: 'var(--spacing-4)', fontWeight: 'bold' }}>Recently Played</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
                 {recentlyPlayed.map(track => (
-                  <div key={track.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)', padding: 'var(--spacing-2)', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }} className="hover-list-item">
+                  <div 
+                    key={track.id} 
+                    style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)', padding: 'var(--spacing-2)', borderRadius: 'var(--radius-sm)', cursor: 'pointer' }} 
+                    className="hover-list-item"
+                    onClick={() => handleSearchResultClick({
+                      type: 'song',
+                      trackId: track.trackId,
+                      title: track.title,
+                      artist: track.artist,
+                      thumbnail: track.cover
+                    })}
+                  >
                     <img src={track.cover} alt={track.title} style={{ width: '48px', height: '48px', borderRadius: '4px', objectFit: 'cover' }} />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 'bold' }}>{track.title}</div>

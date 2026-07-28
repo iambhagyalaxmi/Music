@@ -107,7 +107,7 @@ export default function RoomsPage() {
             <ul className="sidebar-menu">
               <li>
                 <Link href="/dashboard" className="sidebar-link">
-                  Music
+                  Home
                 </Link>
               </li>
               <li>

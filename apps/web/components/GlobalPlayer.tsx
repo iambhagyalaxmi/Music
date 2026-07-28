@@ -167,7 +167,7 @@ export function GlobalPlayer() {
         style={{ 
         position: 'fixed', 
         zIndex: 10000,
-        pointerEvents: playbackError ? 'auto' : (isOnRoomPage ? 'none' : 'auto'),
+        pointerEvents: 'none',
         ...(isOnRoomPage 
           ? (playerRect.isVisible ? {} : { left: -9999, top: -9999, width: 1, height: 1 })
           : (playbackState.trackId ? { bottom: '108px', right: '24px', width: '320px', height: '180px' } : { left: -9999, top: -9999, width: 1, height: 1 })
@@ -309,7 +309,7 @@ export function GlobalPlayer() {
             }} />
           </div>
 
-          <div style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
             {/* Thumbnail */}
             <div style={{ width: '48px', height: '48px', borderRadius: '8px', overflow: 'hidden', backgroundColor: 'var(--color-surface-2)', flexShrink: 0, display: playbackState.trackId ? 'none' : 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {currentTrackDetails.thumbnail ? (
@@ -321,7 +321,7 @@ export function GlobalPlayer() {
 
             {/* Info */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '12px', color: 'var(--color-live)', fontWeight: 'bold', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div style={{ fontSize: '12px', color: 'var(--color-live)', fontWeight: 'bold', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '4px', lineHeight: 1.2 }}>
                 {roomId ? (
                   <>
                     <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'currentColor', display: 'inline-block' }} />
@@ -334,10 +334,10 @@ export function GlobalPlayer() {
                   </>
                 )}
               </div>
-              <div style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2, paddingBottom: '2px' }}>
                 {playbackState.trackId ? currentTrackDetails.title : 'Waiting for music...'}
               </div>
-              <div style={{ color: '#A0A0B8', fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ color: '#A0A0B8', fontSize: '12px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.2 }}>
                 {playbackState.trackId ? currentTrackDetails.artist : 'Select a track in the room'}
               </div>
             </div>

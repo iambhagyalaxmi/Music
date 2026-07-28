@@ -95,6 +95,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   // Local Progress for the progress bar
   const progressInterval = useRef<NodeJS.Timeout | null>(null);
   const [localProgress, setLocalProgress] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Chat UI State
   const [chatInput, setChatInput] = useState('');
@@ -136,6 +137,14 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
 
   // Reconcile local progress for the slider
   useEffect(() => {
+    if (isDragging) {
+      if (progressInterval.current) {
+        clearInterval(progressInterval.current);
+        progressInterval.current = null;
+      }
+      return;
+    }
+
     if (playbackState.isPlaying) {
       const elapsedSinceUpdate = Date.now() - playbackState.updatedAt;
       setLocalProgress(playbackState.positionMs + elapsedSinceUpdate);
@@ -157,7 +166,7 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
     return () => {
       if (progressInterval.current) clearInterval(progressInterval.current);
     };
-  }, [playbackState]);
+  }, [playbackState, isDragging]);
 
   // Auto-scroll chat to bottom
   useEffect(() => {
@@ -317,10 +326,14 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
                min={0}
                max={currentTrackDetails.duration || 300000}
                value={localProgress}
+               onPointerDown={() => setIsDragging(true)}
+               onPointerUp={(e) => {
+                 setIsDragging(false);
+                 seek(Number(e.currentTarget.value));
+               }}
                onChange={(e) => {
                  const newPos = Number(e.target.value);
                  setLocalProgress(newPos);
-                 seek(newPos);
                }}
                style={{ 
                  flex: 1, 

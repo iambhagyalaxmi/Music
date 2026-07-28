@@ -164,7 +164,7 @@ router.post('/room/:roomId/playback/play', async (req: Request, res: Response) =
   const { positionMs } = req.body;
 
   if (!mockPlaybackState[roomId]) {
-    return res.status(400).json({ error: 'No playback state for this room' });
+    mockPlaybackState[roomId] = { trackId: null, isPlaying: false, positionMs: 0, updatedAt: Date.now() };
   }
 
   mockPlaybackState[roomId].isPlaying = true;
@@ -181,7 +181,7 @@ router.post('/room/:roomId/playback/pause', async (req: Request, res: Response) 
   const { positionMs } = req.body;
 
   if (!mockPlaybackState[roomId]) {
-    return res.status(400).json({ error: 'No playback state for this room' });
+    mockPlaybackState[roomId] = { trackId: null, isPlaying: false, positionMs: 0, updatedAt: Date.now() };
   }
 
   mockPlaybackState[roomId].isPlaying = false;
@@ -198,7 +198,7 @@ router.post('/room/:roomId/playback/seek', async (req: Request, res: Response) =
   const { positionMs } = req.body;
 
   if (!mockPlaybackState[roomId]) {
-    return res.status(400).json({ error: 'No playback state for this room' });
+    mockPlaybackState[roomId] = { trackId: null, isPlaying: false, positionMs: 0, updatedAt: Date.now() };
   }
 
   mockPlaybackState[roomId].positionMs = positionMs;
