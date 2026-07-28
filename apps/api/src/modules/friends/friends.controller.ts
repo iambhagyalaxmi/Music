@@ -210,7 +210,7 @@ friendsRoutes.get('/', requireAuth, async (req: AuthenticatedRequest, res: Respo
             profile: true,
             activeSessions: {
               take: 1,
-              orderBy: { lastActive: 'desc' }
+              orderBy: { lastPingAt: 'desc' }
             }
           }
         }

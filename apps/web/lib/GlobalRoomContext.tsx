@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
 import { getPusherClient, subscribeToRoom, unsubscribeFromRoom } from './socket';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+import { API_URL } from './api';
 
 export interface PlaybackState {
   trackId: string | null;

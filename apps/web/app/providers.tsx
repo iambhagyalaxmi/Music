@@ -56,7 +56,8 @@ function GlobalThemeLoader() {
       if (!token) return null;
       // Use absolute URL since this runs on client and server depending on context, wait, API_URL needs to be imported or hardcoded if not. 
       // But we can just use relative URL or process.env.NEXT_PUBLIC_API_URL
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/settings`, { 
+      const { API_URL } = await import('../lib/api');
+      const res = await fetch(`${API_URL}/api/settings`, { 
         headers: { 'Authorization': `Bearer ${token}` } 
       });
       return res.json();
