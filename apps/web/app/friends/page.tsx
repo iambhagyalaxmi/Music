@@ -245,23 +245,26 @@ export default function FriendsPage() {
                 ))}
               </div>
             </div>
-          ) : !hasFriends ? (
-            /* Empty State */
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'var(--spacing-8)', textAlign: 'center', backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', border: '1px dashed var(--color-border)' }}>
-              <div style={{ width: '120px', height: '120px', borderRadius: '50%', backgroundColor: 'rgba(255, 77, 141, 0.1)', color: 'var(--color-accent-pink)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 'var(--spacing-6)' }}>
-                <UserX className="w-16 h-16" />
-              </div>
-              <h2 style={{ fontSize: 'var(--text-h2)', fontWeight: 'bold', marginBottom: 'var(--spacing-3)' }}>It's quiet in here...</h2>
-              <p style={{ fontSize: 'var(--text-base)', color: 'var(--color-text-secondary)', maxWidth: '400px', marginBottom: 'var(--spacing-6)', lineHeight: 1.5 }}>
-                You don't have any friends added yet. Connect with people to share music, create collaborative playlists, and listen together in real-time.
-              </p>
-              <button style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', backgroundColor: 'var(--color-accent-pink)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: 'var(--text-base)', fontWeight: 'bold', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s', boxShadow: '0 4px 12px rgba(255, 77, 141, 0.3)' }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 77, 141, 0.4)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 77, 141, 0.3)'; }}>
-                <Search className="w-5 h-5" /> Find Friends
-              </button>
-            </div>
           ) : (
             <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--spacing-4)' }}>
+              {!hasFriends ? (
+                /* Empty State */
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'var(--spacing-8)', textAlign: 'center', backgroundColor: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', border: '1px dashed var(--color-border)', marginBottom: 'var(--spacing-4)' }}>
+                  <div style={{ width: '120px', height: '120px', borderRadius: '50%', backgroundColor: 'rgba(255, 77, 141, 0.1)', color: 'var(--color-accent-pink)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 'var(--spacing-6)' }}>
+                    <UserX className="w-16 h-16" />
+                  </div>
+                  <h2 style={{ fontSize: 'var(--text-h2)', fontWeight: 'bold', marginBottom: 'var(--spacing-3)' }}>It's quiet in here...</h2>
+                  <p style={{ fontSize: 'var(--text-base)', color: 'var(--color-text-secondary)', maxWidth: '400px', marginBottom: 'var(--spacing-6)', lineHeight: 1.5 }}>
+                    You don't have any friends added yet. Connect with people to share music, create collaborative playlists, and listen together in real-time.
+                  </p>
+                  <button 
+                    onClick={() => { searchInputRef.current?.focus(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', backgroundColor: 'var(--color-accent-pink)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: 'var(--text-base)', fontWeight: 'bold', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s', boxShadow: '0 4px 12px rgba(255, 77, 141, 0.3)' }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 16px rgba(255, 77, 141, 0.4)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(255, 77, 141, 0.3)'; }}>
+                    <Search className="w-5 h-5" /> Find Friends
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--spacing-4)' }}>
             <div style={{ backgroundColor: 'var(--color-surface)', padding: 'var(--spacing-5)', borderRadius: 'var(--radius-lg)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: 'var(--color-text-secondary)' }}>
                 <h3 style={{ fontSize: 'var(--text-base)', margin: 0 }}>Total Friends</h3>
@@ -302,6 +305,7 @@ export default function FriendsPage() {
               <p style={{ fontSize: 'var(--text-h2)', fontWeight: 'bold', margin: 0 }}>{stats.pending}</p>
             </div>
           </div>
+          )}
           
           <div style={{ backgroundColor: 'var(--color-surface)', padding: 'var(--spacing-6)', borderRadius: 'var(--radius-lg)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', marginTop: 'var(--spacing-4)' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
