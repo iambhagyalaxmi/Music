@@ -140,9 +140,9 @@ export const GlobalRoomProvider = ({ children }: { children: ReactNode }) => {
     if (!channel) return;
     
     channel.bind('playback-sync', (state: PlaybackState) => setPlaybackState(state));
-    channel.bind('queue-added', (item: QueueItem) => setQueue(prev => [...prev, item]));
+    channel.bind('queue-added', (item: QueueItem) => setQueue(prev => prev.some(q => q.id === item.id) ? prev : [...prev, item]));
     channel.bind('chat-history', (history: ChatMessage[]) => setChatMessages(history));
-    channel.bind('chat-message', (msg: ChatMessage) => setChatMessages(prev => [...prev, msg]));
+    channel.bind('chat-message', (msg: ChatMessage) => setChatMessages(prev => prev.some(m => m.id === msg.id) ? prev : [...prev, msg]));
     channel.bind('chat-updated', (updatedMsg: ChatMessage) => {
       setChatMessages(prev => prev.map(m => m.id === updatedMsg.id ? updatedMsg : m));
     });
@@ -225,35 +225,64 @@ export const GlobalRoomProvider = ({ children }: { children: ReactNode }) => {
     if (playerRef.current && isPlayerReady) {
       try { playerRef.current.playVideo(); } catch (e) {}
     }
-    postAction('playback/play', { positionMs });
+    if (roomId) {
+      postAction('playback/play', { positionMs });
+    } else {
+      setPlaybackState(prev => ({ ...prev, isPlaying: true, positionMs, updatedAt: Date.now() }));
+    }
   };
   const pause = (positionMs: number) => {
     if (playerRef.current && isPlayerReady) {
       try { playerRef.current.pauseVideo(); } catch (e) {}
     }
-    postAction('playback/pause', { positionMs });
+    if (roomId) {
+      postAction('playback/pause', { positionMs });
+    } else {
+      setPlaybackState(prev => ({ ...prev, isPlaying: false, positionMs, updatedAt: Date.now() }));
+    }
   };
   const seek = (positionMs: number) => {
     if (playerRef.current && isPlayerReady) {
       try { playerRef.current.seekTo(positionMs / 1000, true); } catch (e) {}
     }
-    postAction('playback/seek', { positionMs });
+    if (roomId) {
+      postAction('playback/seek', { positionMs });
+    } else {
+      setPlaybackState(prev => ({ ...prev, positionMs, updatedAt: Date.now() }));
+    }
   };
   const loadTrack = (trackId: string) => {
     if (playerRef.current && isPlayerReady) {
       try { playerRef.current.loadVideoById(trackId, 0); } catch (e) {}
     }
-    postAction('playback/load', { trackId });
+    if (roomId) {
+      postAction('playback/load', { trackId });
+    } else {
+      setPlaybackState({ trackId, isPlaying: true, positionMs: 0, updatedAt: Date.now() });
+    }
   };
 
   const addSelectedToQueue = (song: Partial<QueueItem>) => {
-    postAction('queue/add', {
-      trackId: song.trackId,
+    const item = {
+      id: Math.random().toString(36).substring(7),
+      trackId: song.trackId || '',
       title: song.title || 'Unknown Title',
       artist: song.artist || 'Unknown Artist',
       duration: song.duration || 0,
       thumbnail: song.thumbnail || ''
-    });
+    };
+    if (roomId) {
+      postAction('queue/add', item);
+    } else {
+      setQueue(prev => {
+        const newQueue = [...prev, item];
+        // If nothing is playing, play this song immediately
+        if (!playbackState.trackId) {
+          setTimeout(() => loadTrack(item.trackId), 0);
+        }
+        return newQueue;
+      });
+    }
   };
 
   const sendChatMessage = (text: string, sender: string) => postAction('chat/send', { sender, text });

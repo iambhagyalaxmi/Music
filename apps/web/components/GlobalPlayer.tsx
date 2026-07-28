@@ -167,12 +167,18 @@ export function GlobalPlayer() {
         style={{ 
         position: 'fixed', 
         zIndex: 10000,
-        pointerEvents: playbackError ? 'auto' : 'none',
-        ...(playerRect.isVisible && isOnRoomPage ? {} : { left: -9999, top: -9999, width: 1, height: 1 }),
-        opacity: playerRect.isVisible && isOnRoomPage ? (playbackState.trackId ? 1 : 0) : 0,
+        pointerEvents: playbackError ? 'auto' : (isOnRoomPage ? 'none' : 'auto'),
+        ...(isOnRoomPage 
+          ? (playerRect.isVisible ? {} : { left: -9999, top: -9999, width: 1, height: 1 })
+          : (playbackState.trackId ? { bottom: '108px', right: '24px', width: '320px', height: '180px' } : { left: -9999, top: -9999, width: 1, height: 1 })
+        ),
+        opacity: isOnRoomPage 
+          ? (playerRect.isVisible && playbackState.trackId ? 1 : 0)
+          : (playbackState.trackId ? 1 : 0),
         overflow: 'hidden',
-        borderRadius: 'var(--radius-lg)',
-        transition: 'opacity 0.3s'
+        borderRadius: isOnRoomPage ? 'var(--radius-lg)' : '16px 16px 0 0',
+        transition: 'opacity 0.3s',
+        boxShadow: (!isOnRoomPage && playbackState.trackId) ? '0 -12px 40px rgba(0,0,0,0.5)' : 'none'
       }}>
          {/* Inner wrapper to create a cinematic cover effect when zoomed, and 1:1 crop when unzoomed */}
          <div style={{ 
@@ -275,17 +281,19 @@ export function GlobalPlayer() {
          )}
       </div>
       
-      {/* Mini Player when outside the room */}
-      {roomId && !isOnRoomPage && (
+      {/* Mini Player when outside the room or during local playback */}
+      {(roomId || playbackState.trackId) && !isOnRoomPage && (
         <div style={{
           position: 'fixed',
           bottom: '24px',
           right: '24px',
           width: '320px',
+          height: '84px',
           backgroundColor: 'var(--color-surface)',
-          borderRadius: '16px',
+          borderRadius: playbackState.trackId ? '0 0 16px 16px' : '16px',
           boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
           border: '1px solid var(--color-border)',
+          borderTop: playbackState.trackId ? 'none' : '1px solid var(--color-border)',
           overflow: 'hidden',
           zIndex: 9999,
           display: 'flex',
@@ -303,19 +311,28 @@ export function GlobalPlayer() {
 
           <div style={{ padding: '16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
             {/* Thumbnail */}
-            <div style={{ width: '48px', height: '48px', borderRadius: '8px', overflow: 'hidden', backgroundColor: 'var(--color-surface-2)', flexShrink: 0 }}>
+            <div style={{ width: '48px', height: '48px', borderRadius: '8px', overflow: 'hidden', backgroundColor: 'var(--color-surface-2)', flexShrink: 0, display: playbackState.trackId ? 'none' : 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {currentTrackDetails.thumbnail ? (
                 <img src={currentTrackDetails.thumbnail} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>🎵</div>
+                <div style={{ fontSize: '20px' }}>🎵</div>
               )}
             </div>
 
             {/* Info */}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: '12px', color: 'var(--color-live)', fontWeight: 'bold', marginBottom: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'currentColor', display: 'inline-block' }} />
-                Room: {roomId}
+                {roomId ? (
+                  <>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'currentColor', display: 'inline-block' }} />
+                    Room: {roomId}
+                  </>
+                ) : (
+                  <>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--color-primary)', display: 'inline-block' }} />
+                    Local Playback
+                  </>
+                )}
               </div>
               <div style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {playbackState.trackId ? currentTrackDetails.title : 'Waiting for music...'}
@@ -338,20 +355,24 @@ export function GlobalPlayer() {
               >
                 {playbackState.isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" style={{ marginLeft: '2px' }} />}
               </button>
-              <button 
-                onClick={() => router.push(`/rooms/${roomId}`)}
-                style={{ background: 'none', border: 'none', color: '#A0A0B8', cursor: 'pointer', display: 'flex', padding: '4px' }}
-                title="Return to Room"
-              >
-                <Maximize2 size={18} />
-              </button>
-              <button 
-                onClick={leaveRoom}
-                style={{ background: 'none', border: 'none', color: '#A0A0B8', cursor: 'pointer', display: 'flex', padding: '4px' }}
-                title="Leave Room"
-              >
-                <X size={18} />
-              </button>
+              {roomId && (
+                <button 
+                  onClick={() => router.push(`/rooms/${roomId}`)}
+                  style={{ background: 'none', border: 'none', color: '#A0A0B8', cursor: 'pointer', display: 'flex', padding: '4px' }}
+                  title="Return to Room"
+                >
+                  <Maximize2 size={18} />
+                </button>
+              )}
+              {roomId && (
+                <button 
+                  onClick={leaveRoom}
+                  style={{ background: 'none', border: 'none', color: '#A0A0B8', cursor: 'pointer', display: 'flex', padding: '4px' }}
+                  title="Leave Room"
+                >
+                  <X size={18} />
+                </button>
+              )}
             </div>
           </div>
         </div>

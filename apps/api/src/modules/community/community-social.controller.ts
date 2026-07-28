@@ -158,10 +158,10 @@ router.get('/friends-activity', requireAuth, async (req: Request, res: Response)
     const userId = authReq.user!.userId;
 
     const friends = await db.friend.findMany({
-      where: { OR: [{ userId1: userId }, { userId2: userId }], status: 'ACCEPTED' }
+      where: { OR: [{ userId: userId }, { friendId: userId }] }
     });
     
-    const friendIds = friends.map((f: any) => f.userId1 === userId ? f.userId2 : f.userId1);
+    const friendIds = friends.map((f: any) => f.userId === userId ? f.friendId : f.userId);
     if (friendIds.length === 0) return res.json([]);
 
     const activities = await db.user.findMany({
@@ -171,18 +171,27 @@ router.get('/friends-activity', requireAuth, async (req: Request, res: Response)
         username: true,
         profile: { select: { displayName: true, avatarUrl: true } },
         activeSessions: { orderBy: { lastPingAt: 'desc' }, take: 1 },
-        playbackHistory: { orderBy: { playedAt: 'desc' }, take: 5, include: { song: true } }
+        userActivity: { 
+          where: { activityType: 'VIDEO_WATCHED' }, 
+          orderBy: { createdAt: 'desc' }, 
+          take: 5 
+        }
       }
     });
 
     const formatted = activities.map((friend: any) => {
       const isOnline = friend.activeSessions.length > 0 && 
                       (new Date().getTime() - friend.activeSessions[0].lastPingAt.getTime() < 5 * 60 * 1000);
+      
+      const recentSongs = (friend.userActivity || []).map((act: any) => ({
+        trackId: act.metadata?.videoId || null
+      }));
+
       return {
         user: { id: friend.id, username: friend.username, ...friend.profile },
         isOnline,
-        currentlyPlaying: isOnline && friend.playbackHistory.length > 0 ? friend.playbackHistory[0].song : null,
-        recentSongs: friend.playbackHistory.map((h: any) => h.song)
+        currentlyPlaying: isOnline && recentSongs.length > 0 ? recentSongs[0] : null,
+        recentSongs
       };
     });
 

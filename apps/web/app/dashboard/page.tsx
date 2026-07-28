@@ -37,7 +37,7 @@ export default function Dashboard() {
         const res = await fetch(`${API_URL}/api/ytmusic/search?q=${encodeURIComponent(searchQuery)}`);
         const ytData = res.ok ? await res.json() : { items: [] };
         
-        // Mock matching rooms
+        // Search active rooms
         const matchingRooms = continueListening.filter(r => r.title.toLowerCase().includes(searchQuery.toLowerCase())).map(r => ({ ...r, type: 'room' }));
         
         // Format YT Music songs
@@ -77,23 +77,26 @@ export default function Dashboard() {
     setSearchQuery('');
   };
 
-  if (loading) {
-    return (
-      <main style={{ padding: 'var(--spacing-8)', textAlign: 'center', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <h2 style={{ color: 'var(--color-text-secondary)' }}>Loading your soundsphere...</h2>
-      </main>
-    );
-  }
-
   const [continueListening, setContinueListening] = useState<any[]>([]);
   const [recentlyPlayed, setRecentlyPlayed] = useState<any[]>([]);
   const [friendsActivity, setFriendsActivity] = useState<any[]>([]);
   
-  // Trending can remain static/mock since it's global recommendations
-  const trending = [
-    { id: 1, title: 'Global Top 50', type: 'Playlist', cover: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&q=80' },
-    { id: 2, title: 'Viral Hits', type: 'Playlist', cover: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&q=80' },
-  ];
+  const [trending, setTrending] = useState<any[]>([]);
+
+  const handleTrendingClick = (item: any) => {
+    // Store the playlist in sessionStorage to be picked up by the Room Page
+    if (typeof window !== 'undefined') {
+      const fullPlaylist = item.playlist.map((p: any) => ({
+        trackId: p.trackId,
+        title: p.songTitle,
+        artist: p.artist,
+        duration: 200000,
+        thumbnail: item.cover
+      }));
+      sessionStorage.setItem('initialPlaylist', JSON.stringify(fullPlaylist));
+    }
+    router.push(`/rooms/${Math.random().toString(36).substring(7)}`);
+  };
 
   useEffect(() => {
     if (!token) return;
@@ -106,25 +109,28 @@ export default function Dashboard() {
         const roomsRes = await fetch(`${API_URL}/rooms`, { headers });
         if (roomsRes.ok) {
           const roomsData = await roomsRes.json();
-          setContinueListening(roomsData.map((r: any) => ({
-            id: r.id,
-            title: r.name,
-            users: r.members || 1,
-            image: `https://images.unsplash.com/photo-${1511671782779 + Math.floor(Math.random() * 1000)}?w=400&q=80` // random cover
-          })));
+          setContinueListening(roomsData.map((r: any) => {
+            return {
+              id: r.id,
+              title: r.name,
+              users: r.members || 1,
+              // Use official album artwork if available; otherwise, use a unique deterministic placeholder seeded by the title
+              image: r.imageUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(r.title)}&background=random&size=400`
+            };
+          }));
         }
 
         // 2. Fetch Recently Played (History)
         const historyRes = await fetch(`${API_URL}/api/ytmusic/history`, { headers });
         if (historyRes.ok) {
           const historyData = await historyRes.json();
-          // Map UserActivity metadata (videoId) to UI format
-          setRecentlyPlayed((historyData.items || []).map((item: any, i: number) => ({
-            id: item.id || i,
-            title: `Track ${item.metadata?.videoId?.substring(0, 5) || 'Unknown'}`,
-            artist: 'YouTube Music',
+          // The backend now returns enriched data (title, artist, cover)
+          setRecentlyPlayed((historyData.items || []).map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            artist: item.artist,
             time: new Date(item.createdAt).toLocaleDateString(),
-            cover: `https://img.youtube.com/vi/${item.metadata?.videoId}/default.jpg`
+            cover: item.cover
           })));
         }
 
@@ -140,6 +146,62 @@ export default function Dashboard() {
             avatar: f.user.avatarUrl || `https://ui-avatars.com/api/?name=${f.user.displayName || f.user.username}&background=random`
           })));
         }
+
+        // 4. Fetch Trending
+        const exploreRes = await fetch(`${API_URL}/api/ytmusic/explore?category=trending`, { headers });
+        if (exploreRes.ok) {
+          const exploreData = await exploreRes.json();
+          setTrending([
+            {
+              id: 1,
+              title: 'Global Top 50',
+              type: 'Playlist',
+              cover: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&q=80',
+              playlist: exploreData.items.map((i: any) => ({
+                trackId: i.trackId,
+                songTitle: i.title,
+                artist: i.artist,
+                cover: i.cover
+              }))
+            },
+            {
+              id: 2,
+              title: 'Viral Hits',
+              type: 'Playlist',
+              cover: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&q=80',
+              playlist: exploreData.items.slice(0, 20).map((i: any) => ({
+                trackId: i.trackId,
+                songTitle: i.title,
+                artist: i.artist,
+                cover: i.cover
+              }))
+            },
+            {
+              id: 3,
+              title: 'New Music Friday',
+              type: 'Playlist',
+              cover: 'https://images.unsplash.com/photo-1493225457124-a1a2a5f5646f?w=400&q=80',
+              playlist: exploreData.items.slice(20, 40).map((i: any) => ({
+                trackId: i.trackId,
+                songTitle: i.title,
+                artist: i.artist,
+                cover: i.cover
+              }))
+            },
+            {
+              id: 4,
+              title: 'Chill Vibes',
+              type: 'Playlist',
+              cover: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=400&q=80',
+              playlist: exploreData.items.slice(10, 30).map((i: any) => ({
+                trackId: i.trackId,
+                songTitle: i.title,
+                artist: i.artist,
+                cover: i.cover
+              }))
+            }
+          ]);
+        }
       } catch (err) {
         console.error('Failed to fetch dashboard data', err);
       }
@@ -147,6 +209,14 @@ export default function Dashboard() {
 
     fetchDashboardData();
   }, [token]);
+
+  if (loading) {
+    return (
+      <main style={{ padding: 'var(--spacing-8)', textAlign: 'center', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <h2 style={{ color: 'var(--color-text-secondary)' }}>Loading your soundsphere...</h2>
+      </main>
+    );
+  }
 
   return (
     <SubscriptionGuard>
@@ -332,7 +402,7 @@ export default function Dashboard() {
             <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide snap-x">
               {continueListening.map(room => (
                 <div key={room.id} className="hover-card shrink-0 min-w-[220px] bg-[var(--color-surface)] rounded-[var(--radius-md)] overflow-hidden cursor-pointer transition-all shadow-[0_4px_12px_rgba(0,0,0,0.1)] snap-start"
-                onClick={handleCreateRoom} // Mocking join
+                onClick={() => router.push(`/rooms/${room.id}`)}
                 >
                   <img src={room.image} alt={room.title} style={{ width: '100%', height: '140px', objectFit: 'cover' }} />
                   <div style={{ padding: 'var(--spacing-3)' }}>
@@ -370,7 +440,12 @@ export default function Dashboard() {
               <h2 style={{ fontSize: 'var(--text-h3)', marginBottom: 'var(--spacing-4)', fontWeight: 'bold' }}>Trending Recommendations</h2>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
                 {trending.map(item => (
-                  <div key={item.id} style={{ position: 'relative', height: '100px', borderRadius: 'var(--radius-md)', overflow: 'hidden', cursor: 'pointer' }} className="hover-card">
+                  <div 
+                    key={item.id} 
+                    style={{ position: 'relative', height: '100px', borderRadius: 'var(--radius-md)', overflow: 'hidden', cursor: 'pointer' }} 
+                    className="hover-card"
+                    onClick={() => handleTrendingClick(item)}
+                  >
                     <img src={item.cover} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.6)' }} />
                     <div style={{ position: 'absolute', bottom: '12px', left: '16px' }}>
                       <div style={{ fontWeight: 'bold', fontSize: 'var(--text-h3)' }}>{item.title}</div>

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Users, Activity, UserPlus, Headphones, UserCheck, Search, Mail, MessageCircle, PlayCircle, User, Check, X, Star, Heart, ListMusic, Play, Share, Trophy, Clock, Flame, Target, UserX, Send } from 'lucide-react';
 import { SubscriptionGuard } from '../../lib/SubscriptionGuard';
+import { API_URL } from '../../lib/api';
 
 export default function FriendsPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -16,25 +17,26 @@ export default function FriendsPage() {
     { id: 2, sender: 'Me', text: "Yes! It's so good. We should listen together later." },
     { id: 3, sender: 'Jessica', text: "Definitely! Send me an invite when you're free." }
   ]);
-  const [friendRequests, setFriendRequests] = useState([
-    { id: 1, name: 'Jessica Wong', subtitle: '2 mutual friends', avatar: 'https://i.pravatar.cc/150?u=jessica' },
-    { id: 2, name: 'Mike Peterson', subtitle: 'New to SoundSphere', avatar: 'https://i.pravatar.cc/150?u=mike' }
-  ]);
-  const [outgoingRequests, setOutgoingRequests] = useState([
-    { id: 101, name: 'Ryan Cooper', status: 'Request Sent', avatar: 'https://i.pravatar.cc/150?u=ryan' }
-  ]);
-  const [recommendedFriends, setRecommendedFriends] = useState([
-    { id: 201, name: 'Sophia Lee', subtitle: '12 Mutual Friends', iconType: 'users', avatar: 'https://i.pravatar.cc/150?u=sophia' },
-    { id: 202, name: 'Chris Evans', subtitle: 'Similar Music Taste', iconType: 'headphones', avatar: 'https://i.pravatar.cc/150?u=chris' },
-    { id: 203, name: 'Olivia Martin', subtitle: 'Same Favorite Artist', iconType: 'star', avatar: 'https://i.pravatar.cc/150?u=olivia' },
-    { id: 204, name: 'Liam Wilson', subtitle: 'Same Playlist Interests', iconType: 'listMusic', avatar: 'https://i.pravatar.cc/150?u=liam' }
-  ]);
+  const [friendRequests, setFriendRequests] = useState<any[]>([]);
+  const [outgoingRequests, setOutgoingRequests] = useState<any[]>([]);
+  const [recommendedFriends, setRecommendedFriends] = useState<any[]>([]);
+  const [friendsList, setFriendsList] = useState<any[]>([]);
+  const [friendsActivity, setFriendsActivity] = useState<any[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [playingSharedSongId, setPlayingSharedSongId] = useState<string | null>(null);
   const [reactedSharedSongIds, setReactedSharedSongIds] = useState<string[]>([]);
   const [openedPlaylistId, setOpenedPlaylistId] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const [stats, setStats] = useState({
+    total: 0,
+    online: 0,
+    requests: 0,
+    listening: 0,
+    pending: 0
+  });
 
   useEffect(() => {
     if (audioRef.current) {
@@ -80,11 +82,86 @@ export default function FriendsPage() {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
+  const fetchFriendsData = async () => {
+    try {
+      const token = localStorage.getItem('soundsphere_token');
+      const headers = { Authorization: `Bearer ${token}` };
+      
+      // Fetch activity/stats
+      const res = await fetch(`${API_URL}/api/community-social/friends-activity`, { headers });
+      if (res.ok) {
+        const data = await res.json();
+        setFriendsActivity(data);
+        const onlineCount = data.filter((f: any) => f.isOnline).length;
+        const listeningCount = data.filter((f: any) => f.currentlyPlaying).length;
+        
+        // Fetch incoming
+        const incRes = await fetch(`${API_URL}/api/friends/requests/incoming`, { headers });
+        let inc = [];
+        if (incRes.ok) inc = await incRes.json();
+        
+        // Fetch outgoing
+        const outRes = await fetch(`${API_URL}/api/friends/requests/outgoing`, { headers });
+        let out = [];
+        if (outRes.ok) out = await outRes.json();
+
+        // Fetch suggestions
+        const sugRes = await fetch(`${API_URL}/api/friends/suggestions`, { headers });
+        let sug = [];
+        if (sugRes.ok) sug = await sugRes.json();
+
+        // Fetch friends list
+        const frRes = await fetch(`${API_URL}/api/friends/`, { headers });
+        let frList = [];
+        if (frRes.ok) frList = await frRes.json();
+
+        setFriendRequests(inc.map((r: any) => ({
+          id: r.id,
+          name: r.sender.profile?.displayName || r.sender.username,
+          subtitle: '@' + r.sender.username,
+          avatar: r.sender.profile?.avatarUrl || `https://i.pravatar.cc/150?u=${r.sender.username}`
+        })));
+
+        setOutgoingRequests(out.map((r: any) => ({
+          id: r.id,
+          name: r.receiver.profile?.displayName || r.receiver.username,
+          status: 'Request Sent',
+          avatar: r.receiver.profile?.avatarUrl || `https://i.pravatar.cc/150?u=${r.receiver.username}`
+        })));
+
+        setRecommendedFriends(sug.map((u: any) => ({
+          id: u.id,
+          name: u.profile?.displayName || u.username,
+          subtitle: '@' + u.username,
+          iconType: 'users',
+          avatar: u.profile?.avatarUrl || `https://i.pravatar.cc/150?u=${u.username}`
+        })));
+
+        setFriendsList(frList);
+
+        setStats({
+          total: data.length || 0,
+          online: onlineCount || 0,
+          requests: inc.length || 0,
+          listening: listeningCount || 0,
+          pending: out.length || 0
+        });
+        
+        setHasFriends(data.length > 0);
+      }
+    } catch (err) {
+      console.error('Failed to fetch friends data', err);
+    } finally {
       setIsLoading(false);
-    }, 1200);
-    return () => clearTimeout(timer);
+    }
+  };
+
+  useEffect(() => {
+    // Initial fetch
+    fetchFriendsData();
+    // Poll for real-time online status updates
+    const interval = setInterval(fetchFriendsData, 15000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -190,7 +267,7 @@ export default function FriendsPage() {
                 <h3 style={{ fontSize: 'var(--text-base)', margin: 0 }}>Total Friends</h3>
                 <Users className="w-5 h-5" />
               </div>
-              <p style={{ fontSize: 'var(--text-h2)', fontWeight: 'bold', margin: 0 }}>48</p>
+              <p style={{ fontSize: 'var(--text-h2)', fontWeight: 'bold', margin: 0 }}>{stats.total}</p>
             </div>
 
             <div style={{ backgroundColor: 'var(--color-surface)', padding: 'var(--spacing-5)', borderRadius: 'var(--radius-lg)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
@@ -198,7 +275,7 @@ export default function FriendsPage() {
                 <h3 style={{ fontSize: 'var(--text-base)', margin: 0 }}>Online Friends</h3>
                 <Activity className="w-5 h-5" style={{ color: 'var(--color-accent-green)' }} />
               </div>
-              <p style={{ fontSize: 'var(--text-h2)', fontWeight: 'bold', margin: 0 }}>12</p>
+              <p style={{ fontSize: 'var(--text-h2)', fontWeight: 'bold', margin: 0 }}>{stats.online}</p>
             </div>
 
             <div style={{ backgroundColor: 'var(--color-surface)', padding: 'var(--spacing-5)', borderRadius: 'var(--radius-lg)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
@@ -206,7 +283,7 @@ export default function FriendsPage() {
                 <h3 style={{ fontSize: 'var(--text-base)', margin: 0 }}>Friend Requests</h3>
                 <UserPlus className="w-5 h-5" style={{ color: 'var(--color-accent-pink)' }} />
               </div>
-              <p style={{ fontSize: 'var(--text-h2)', fontWeight: 'bold', margin: 0 }}>3</p>
+              <p style={{ fontSize: 'var(--text-h2)', fontWeight: 'bold', margin: 0 }}>{stats.requests}</p>
             </div>
 
             <div style={{ backgroundColor: 'var(--color-surface)', padding: 'var(--spacing-5)', borderRadius: 'var(--radius-lg)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
@@ -214,7 +291,7 @@ export default function FriendsPage() {
                 <h3 style={{ fontSize: 'var(--text-base)', margin: 0 }}>Listening Together</h3>
                 <Headphones className="w-5 h-5" style={{ color: 'var(--color-accent-purple, #9D4EDD)' }} />
               </div>
-              <p style={{ fontSize: 'var(--text-h2)', fontWeight: 'bold', margin: 0 }}>4</p>
+              <p style={{ fontSize: 'var(--text-h2)', fontWeight: 'bold', margin: 0 }}>{stats.listening}</p>
             </div>
             
             <div style={{ backgroundColor: 'var(--color-surface)', padding: 'var(--spacing-5)', borderRadius: 'var(--radius-lg)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-3)' }}>
@@ -222,7 +299,7 @@ export default function FriendsPage() {
                 <h3 style={{ fontSize: 'var(--text-base)', margin: 0 }}>Pending Invites</h3>
                 <UserCheck className="w-5 h-5" />
               </div>
-              <p style={{ fontSize: 'var(--text-h2)', fontWeight: 'bold', margin: 0 }}>1</p>
+              <p style={{ fontSize: 'var(--text-h2)', fontWeight: 'bold', margin: 0 }}>{stats.pending}</p>
             </div>
           </div>
           
@@ -237,7 +314,28 @@ export default function FriendsPage() {
                     onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
                     onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
                     onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                    onClick={() => { searchInputRef.current?.focus(); }}
+                    onClick={async () => {
+                      if (searchQuery.trim()) {
+                        try {
+                          const token = localStorage.getItem('soundsphere_token');
+                          const headers = { Authorization: `Bearer ${token}` };
+                          const res = await fetch(`${API_URL}/api/friends/search?q=${encodeURIComponent(searchQuery)}`, { headers });
+                          if (res.ok) {
+                            const users = await res.json();
+                            if (users.length > 0) {
+                              await fetch(`${API_URL}/api/friends/request/${users[0].id}`, { method: 'POST', headers });
+                              showToast(`Friend request sent to ${users[0].username}!`);
+                              fetchFriendsData();
+                            } else {
+                              showToast('User not found.');
+                            }
+                          }
+                        } catch (e) {}
+                        setSearchQuery('');
+                      } else {
+                        searchInputRef.current?.focus();
+                      }
+                    }}
                   >
                     <UserPlus className="w-4 h-4" />
                     Add Friend
@@ -263,10 +361,32 @@ export default function FriendsPage() {
                 <input 
                   ref={searchInputRef}
                   type="text" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search friends by Name, Username, or Email..." 
                   style={{ width: '100%', padding: '16px 16px 16px 48px', backgroundColor: '#09090B', border: '1px solid var(--color-border)', borderRadius: '12px', color: 'var(--color-text-primary)', fontSize: 'var(--text-base)', outline: 'none', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)' }}
                   onFocus={(e) => e.target.style.borderColor = 'var(--color-accent-pink)'}
                   onBlur={(e) => e.target.style.borderColor = 'var(--color-border)'}
+                  onKeyDown={async (e) => {
+                    if (e.key === 'Enter' && searchQuery.trim()) {
+                      try {
+                        const token = localStorage.getItem('soundsphere_token');
+                        const headers = { Authorization: `Bearer ${token}` };
+                        const res = await fetch(`${API_URL}/api/friends/search?q=${encodeURIComponent(searchQuery)}`, { headers });
+                        if (res.ok) {
+                          const users = await res.json();
+                          if (users.length > 0) {
+                            await fetch(`${API_URL}/api/friends/request/${users[0].id}`, { method: 'POST', headers });
+                            showToast(`Friend request sent to ${users[0].username}!`);
+                            fetchFriendsData();
+                          } else {
+                            showToast('User not found.');
+                          }
+                        }
+                      } catch (e) {}
+                      setSearchQuery('');
+                    }
+                  }}
                 />
               </div>
 
@@ -362,18 +482,26 @@ export default function FriendsPage() {
                         </div>
                         <div style={{ display: 'flex', gap: '8px' }}>
                           <button 
-                            onClick={() => {
-                              setFriendRequests(friendRequests.filter(r => r.id !== req.id));
-                              showToast(`Accepted ${req.name}'s request!`);
+                            onClick={async () => {
+                              try {
+                                const token = localStorage.getItem('soundsphere_token');
+                                await fetch(`${API_URL}/api/friends/accept/${req.id}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+                                showToast(`Accepted ${req.name}'s request!`);
+                                fetchFriendsData();
+                              } catch(e) {}
                             }}
                             style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-accent-pink)', color: '#fff', border: 'none', borderRadius: '50%', cursor: 'pointer', boxShadow: '0 2px 8px rgba(255, 77, 141, 0.3)' }} title="Accept"
                           >
                             <Check className="w-4 h-4" />
                           </button>
                           <button 
-                            onClick={() => {
-                              setFriendRequests(friendRequests.filter(r => r.id !== req.id));
-                              showToast(`Rejected ${req.name}'s request.`);
+                            onClick={async () => {
+                              try {
+                                const token = localStorage.getItem('soundsphere_token');
+                                await fetch(`${API_URL}/api/friends/reject/${req.id}`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+                                showToast(`Rejected ${req.name}'s request.`);
+                                fetchFriendsData();
+                              } catch(e) {}
                             }}
                             style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'transparent', color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)', borderRadius: '50%', cursor: 'pointer' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = '#fff'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)'; e.currentTarget.style.borderColor = 'var(--color-border)'; }} title="Reject"
                           >
@@ -404,9 +532,13 @@ export default function FriendsPage() {
                           </div>
                         </div>
                         <button 
-                          onClick={() => {
-                            setOutgoingRequests(outgoingRequests.filter(r => r.id !== req.id));
-                            showToast(`Canceled request to ${req.name}`);
+                          onClick={async () => {
+                            try {
+                              const token = localStorage.getItem('soundsphere_token');
+                              await fetch(`${API_URL}/api/friends/request/${req.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+                              showToast(`Canceled request to ${req.name}`);
+                              fetchFriendsData();
+                            } catch (e) {}
                           }}
                           style={{ padding: '6px 12px', fontSize: '0.75rem', fontWeight: 'bold', backgroundColor: 'transparent', color: 'var(--color-text-secondary)', border: '1px solid var(--color-border)', borderRadius: '6px', cursor: 'pointer' }} onMouseEnter={(e) => { e.currentTarget.style.color = '#ff4d4d'; e.currentTarget.style.borderColor = '#ff4d4d'; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--color-text-secondary)'; e.currentTarget.style.borderColor = 'var(--color-border)'; }}
                         >
@@ -448,10 +580,14 @@ export default function FriendsPage() {
                       </div>
                       <div style={{ display: 'flex', gap: 'var(--spacing-2)' }}>
                         <button 
-                          onClick={() => {
-                            setRecommendedFriends(recommendedFriends.filter(f => f.id !== friend.id));
-                            setOutgoingRequests([...outgoingRequests, { id: friend.id, name: friend.name, status: 'Request Sent', avatar: friend.avatar }]);
-                            showToast(`Friend request sent to ${friend.name}!`);
+                          onClick={async () => {
+                            try {
+                              const token = localStorage.getItem('soundsphere_token');
+                              const headers = { Authorization: `Bearer ${token}` };
+                              await fetch(`${API_URL}/api/friends/request/${friend.id}`, { method: 'POST', headers });
+                              showToast(`Friend request sent to ${friend.name}!`);
+                              fetchFriendsData();
+                            } catch (e) {}
                           }}
                           style={{ flex: 1, padding: '8px', backgroundColor: 'var(--color-accent-pink)', color: '#fff', border: 'none', borderRadius: '8px', fontSize: 'var(--text-sm)', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                         >
@@ -594,62 +730,48 @@ export default function FriendsPage() {
           <div style={{ marginTop: 'var(--spacing-4)' }}>
             <h2 style={{ fontSize: 'var(--text-h3)', fontWeight: 'bold', marginBottom: 'var(--spacing-4)' }}>Online Friends</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 'var(--spacing-4)' }}>
-              
-              {/* Friend Card 1 */}
-              <div style={{ backgroundColor: 'var(--color-surface)', padding: 'var(--spacing-5)', borderRadius: 'var(--radius-lg)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
-                  <div style={{ position: 'relative' }}>
-                    <img src="https://i.pravatar.cc/150?u=alex" alt="Alex Johnson" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }} />
-                    <div style={{ position: 'absolute', bottom: 0, right: 0, width: '12px', height: '12px', backgroundColor: 'var(--color-accent-green)', borderRadius: '50%', border: '2px solid var(--color-surface)' }}></div>
-                  </div>
-                  <div>
-                    <h4 style={{ fontSize: 'var(--text-base)', fontWeight: 'bold', margin: 0 }}>Alex Johnson</h4>
-                    <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '1rem' }}>🎵</span>
-                      Listening
-                    </p>
-                  </div>
+              {/* Online Friends List */}
+              {friendsList.filter(f => f.isOnline).length === 0 ? (
+                <div style={{ gridColumn: '1 / -1', padding: 'var(--spacing-5)', textAlign: 'center', color: 'var(--color-text-secondary)' }}>
+                  No friends are currently online.
                 </div>
-                <div style={{ display: 'flex', gap: 'var(--spacing-2)' }}>
-                  <button style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '8px', backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--color-text-primary)', border: 'none', borderRadius: '8px', cursor: 'pointer', transition: 'background-color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}>
-                    <MessageCircle className="w-4 h-4" /> Message
-                  </button>
-                  <button style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '8px', backgroundColor: 'var(--color-accent-purple, #9D4EDD)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', boxShadow: '0 4px 10px rgba(157, 78, 221, 0.3)' }}>
-                    <PlayCircle className="w-4 h-4" /> Join
-                  </button>
-                  <button style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--color-text-primary)', border: 'none', borderRadius: '8px', cursor: 'pointer', transition: 'background-color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'} title="View Profile">
-                    <User className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Friend Card 2 */}
-              <div style={{ backgroundColor: 'var(--color-surface)', padding: 'var(--spacing-5)', borderRadius: 'var(--radius-lg)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
-                  <div style={{ position: 'relative' }}>
-                    <img src="https://i.pravatar.cc/150?u=sarah" alt="Sarah Miller" style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }} />
-                    <div style={{ position: 'absolute', bottom: 0, right: 0, width: '12px', height: '12px', backgroundColor: 'var(--color-accent-green)', borderRadius: '50%', border: '2px solid var(--color-surface)' }}></div>
+              ) : (
+                friendsList.filter(f => f.isOnline).map(friend => (
+                  <div key={friend.id} style={{ backgroundColor: 'var(--color-surface)', padding: 'var(--spacing-5)', borderRadius: 'var(--radius-lg)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
+                      <div style={{ position: 'relative' }}>
+                        <img src={friend.profile?.avatarUrl || `https://i.pravatar.cc/150?u=${friend.username}`} alt={friend.profile?.displayName || friend.username} style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }} />
+                        <div style={{ position: 'absolute', bottom: 0, right: 0, width: '12px', height: '12px', backgroundColor: 'var(--color-accent-green)', borderRadius: '50%', border: '2px solid var(--color-surface)' }}></div>
+                      </div>
+                      <div style={{ overflow: 'hidden' }}>
+                        <h4 style={{ fontSize: 'var(--text-base)', fontWeight: 'bold', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{friend.profile?.displayName || friend.username}</h4>
+                        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Activity className="w-3 h-3" style={{ color: 'var(--color-accent-green)' }} />
+                          Online
+                        </p>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 'var(--spacing-2)' }}>
+                      <button style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '8px', backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--color-text-primary)', border: 'none', borderRadius: '8px', cursor: 'pointer', transition: 'background-color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}>
+                        <MessageCircle className="w-4 h-4" /> Message
+                      </button>
+                      <button 
+                        onClick={async () => {
+                          try {
+                            const token = localStorage.getItem('soundsphere_token');
+                            await fetch(`${API_URL}/api/friends/${friend.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+                            showToast(`Removed ${friend.username} from friends.`);
+                            fetchFriendsData();
+                          } catch (e) {}
+                        }}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', backgroundColor: 'rgba(255, 77, 141, 0.1)', color: 'var(--color-accent-pink)', border: 'none', borderRadius: '8px', cursor: 'pointer', transition: 'background-color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 77, 141, 0.2)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 77, 141, 0.1)'} title="Remove Friend"
+                      >
+                        <UserX className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <h4 style={{ fontSize: 'var(--text-base)', fontWeight: 'bold', margin: 0 }}>Sarah Miller</h4>
-                    <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '1rem' }}>🎙</span>
-                      In Voice Chat
-                    </p>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: 'var(--spacing-2)' }}>
-                  <button style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '8px', backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--color-text-primary)', border: 'none', borderRadius: '8px', cursor: 'pointer', transition: 'background-color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'}>
-                    <MessageCircle className="w-4 h-4" /> Message
-                  </button>
-                  <button style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '8px', backgroundColor: 'var(--color-accent-purple, #9D4EDD)', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', boxShadow: '0 4px 10px rgba(157, 78, 221, 0.3)' }}>
-                    <PlayCircle className="w-4 h-4" /> Join
-                  </button>
-                  <button style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '8px', backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--color-text-primary)', border: 'none', borderRadius: '8px', cursor: 'pointer', transition: 'background-color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)'} onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'} title="View Profile">
-                    <User className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
+                ))
+              )}
 
             </div>
           </div>
@@ -657,90 +779,54 @@ export default function FriendsPage() {
           <div style={{ marginTop: 'var(--spacing-4)' }}>
             <h2 style={{ fontSize: 'var(--text-h3)', fontWeight: 'bold', marginBottom: 'var(--spacing-4)' }}>Currently Listening</h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 'var(--spacing-4)' }}>
-              
-              {/* Currently Listening Card 1 */}
-              <div style={{ backgroundColor: 'var(--color-surface)', padding: 'var(--spacing-5)', borderRadius: 'var(--radius-lg)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: 'var(--color-accent-purple, #9D4EDD)' }}></div>
-                
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
-                  <img src="https://i.pravatar.cc/150?u=alex" alt="Alex" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
-                  <h4 style={{ fontSize: 'var(--text-base)', fontWeight: 'bold', margin: 0 }}>Alex</h4>
-                  <span style={{ marginLeft: 'auto', backgroundColor: 'rgba(157, 78, 221, 0.1)', color: 'var(--color-accent-purple, #9D4EDD)', padding: '4px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Activity className="w-3 h-3" /> Live
-                  </span>
+              {friendsActivity.filter(f => f.currentlyPlaying).length === 0 ? (
+                <div style={{ gridColumn: '1 / -1', padding: 'var(--spacing-5)', textAlign: 'center', color: 'var(--color-text-secondary)' }}>
+                  No friends are currently listening to music.
                 </div>
-                
-                <div style={{ backgroundColor: '#09090B', padding: 'var(--spacing-3)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '1.2rem' }}>🎵</span>
-                    <h5 style={{ fontSize: 'var(--text-base)', fontWeight: 'bold', margin: 0, color: '#fff' }}>Blinding Lights</h5>
+              ) : (
+                friendsActivity.filter(f => f.currentlyPlaying).map((friend: any) => (
+                  <div key={friend.user.id} style={{ backgroundColor: 'var(--color-surface)', padding: 'var(--spacing-5)', borderRadius: 'var(--radius-lg)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: 'var(--color-accent-purple, #9D4EDD)' }}></div>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
+                      <img src={friend.user.avatarUrl || `https://i.pravatar.cc/150?u=${friend.user.username}`} alt={friend.user.displayName || friend.user.username} style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
+                      <h4 style={{ fontSize: 'var(--text-base)', fontWeight: 'bold', margin: 0 }}>{friend.user.displayName || friend.user.username}</h4>
+                      <span style={{ marginLeft: 'auto', backgroundColor: 'rgba(157, 78, 221, 0.1)', color: 'var(--color-accent-purple, #9D4EDD)', padding: '4px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Activity className="w-3 h-3" /> Live
+                      </span>
+                    </div>
+                    
+                    <div style={{ backgroundColor: '#09090B', padding: 'var(--spacing-3)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '1.2rem' }}>🎵</span>
+                        <h5 style={{ fontSize: 'var(--text-base)', fontWeight: 'bold', margin: 0, color: '#fff' }}>Playing a track</h5>
+                      </div>
+                      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: 0, marginLeft: '32px' }}>Track ID: {friend.currentlyPlaying.trackId}</p>
+                    </div>
+
+                    <button 
+                      onClick={() => {
+                        if (activeSessionId === friend.user.id) {
+                          setActiveSessionId(null);
+                          showToast('Left session.');
+                        } else {
+                          setActiveSessionId(friend.user.id);
+                          showToast('Joined session!');
+                        }
+                      }} 
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px', backgroundColor: activeSessionId === friend.user.id ? 'rgba(157, 78, 221, 0.2)' : 'var(--color-accent-purple, #9D4EDD)', color: activeSessionId === friend.user.id ? 'var(--color-accent-purple, #9D4EDD)' : '#fff', border: activeSessionId === friend.user.id ? '1px solid var(--color-accent-purple, #9D4EDD)' : 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', boxShadow: activeSessionId === friend.user.id ? 'none' : '0 4px 10px rgba(157, 78, 221, 0.3)', transition: 'all 0.2s' }} 
+                      onMouseEnter={(e) => { if (activeSessionId !== friend.user.id) e.currentTarget.style.transform = 'scale(1.02)' }} 
+                      onMouseLeave={(e) => { if (activeSessionId !== friend.user.id) e.currentTarget.style.transform = 'scale(1)' }}
+                    >
+                      {activeSessionId === friend.user.id ? (
+                        <><Check className="w-5 h-5" /> Listening with {friend.user.displayName || friend.user.username}</>
+                      ) : (
+                        <><PlayCircle className="w-5 h-5" /> Join Session</>
+                      )}
+                    </button>
                   </div>
-                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: 0, marginLeft: '32px' }}>The Weeknd</p>
-                </div>
-
-                <button 
-                  onClick={() => {
-                    if (activeSessionId === 'alex') {
-                      setActiveSessionId(null);
-                      showToast('Left session.');
-                    } else {
-                      setActiveSessionId('alex');
-                      showToast('Joined session!');
-                    }
-                  }} 
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px', backgroundColor: activeSessionId === 'alex' ? 'rgba(157, 78, 221, 0.2)' : 'var(--color-accent-purple, #9D4EDD)', color: activeSessionId === 'alex' ? 'var(--color-accent-purple, #9D4EDD)' : '#fff', border: activeSessionId === 'alex' ? '1px solid var(--color-accent-purple, #9D4EDD)' : 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', boxShadow: activeSessionId === 'alex' ? 'none' : '0 4px 10px rgba(157, 78, 221, 0.3)', transition: 'all 0.2s' }} 
-                  onMouseEnter={(e) => { if (activeSessionId !== 'alex') e.currentTarget.style.transform = 'scale(1.02)' }} 
-                  onMouseLeave={(e) => { if (activeSessionId !== 'alex') e.currentTarget.style.transform = 'scale(1)' }}
-                >
-                  {activeSessionId === 'alex' ? (
-                    <><Check className="w-5 h-5" /> Listening with Alex</>
-                  ) : (
-                    <><PlayCircle className="w-5 h-5" /> Join Session</>
-                  )}
-                </button>
-              </div>
-
-              {/* Currently Listening Card 2 */}
-              <div style={{ backgroundColor: 'var(--color-surface)', padding: 'var(--spacing-5)', borderRadius: 'var(--radius-lg)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', gap: 'var(--spacing-4)', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', backgroundColor: 'var(--color-accent-purple, #9D4EDD)' }}></div>
-                
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)' }}>
-                  <img src="https://i.pravatar.cc/150?u=sarah" alt="Sarah" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
-                  <h4 style={{ fontSize: 'var(--text-base)', fontWeight: 'bold', margin: 0 }}>Sarah</h4>
-                  <span style={{ marginLeft: 'auto', backgroundColor: 'rgba(157, 78, 221, 0.1)', color: 'var(--color-accent-purple, #9D4EDD)', padding: '4px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <Activity className="w-3 h-3" /> Live
-                  </span>
-                </div>
-                
-                <div style={{ backgroundColor: '#09090B', padding: 'var(--spacing-3)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '1.2rem' }}>🎵</span>
-                    <h5 style={{ fontSize: 'var(--text-base)', fontWeight: 'bold', margin: 0, color: '#fff' }}>Levitating</h5>
-                  </div>
-                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: 0, marginLeft: '32px' }}>Dua Lipa</p>
-                </div>
-
-                <button 
-                  onClick={() => {
-                    if (activeSessionId === 'sarah') {
-                      setActiveSessionId(null);
-                      showToast('Left session.');
-                    } else {
-                      setActiveSessionId('sarah');
-                      showToast('Joined session!');
-                    }
-                  }} 
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px', backgroundColor: activeSessionId === 'sarah' ? 'rgba(157, 78, 221, 0.2)' : 'var(--color-accent-purple, #9D4EDD)', color: activeSessionId === 'sarah' ? 'var(--color-accent-purple, #9D4EDD)' : '#fff', border: activeSessionId === 'sarah' ? '1px solid var(--color-accent-purple, #9D4EDD)' : 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', boxShadow: activeSessionId === 'sarah' ? 'none' : '0 4px 10px rgba(157, 78, 221, 0.3)', transition: 'all 0.2s' }} 
-                  onMouseEnter={(e) => { if (activeSessionId !== 'sarah') e.currentTarget.style.transform = 'scale(1.02)' }} 
-                  onMouseLeave={(e) => { if (activeSessionId !== 'sarah') e.currentTarget.style.transform = 'scale(1)' }}
-                >
-                  {activeSessionId === 'sarah' ? (
-                    <><Check className="w-5 h-5" /> Listening with Sarah</>
-                  ) : (
-                    <><PlayCircle className="w-5 h-5" /> Join Session</>
-                  )}
-                </button>
-              </div>
+                ))
+              )}
 
             </div>
           </div>

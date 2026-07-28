@@ -35,15 +35,30 @@ export default function RoomPage({ params }: { params: Promise<{ roomId: string 
   
   useEffect(() => {
     if (!isConnected || roomId !== roomIdFromUrl) return;
-    const initialTrack = searchParams.get('initialTrack');
     
-    if (!initialTrack) {
-      // Reset the flag when the URL is cleared, so we can add more songs later!
-      hasAddedInitialTrack.current = false;
-      return;
+    if (hasAddedInitialTrack.current) return;
+    
+    // First check for a full playlist in sessionStorage
+    const storedPlaylist = sessionStorage.getItem('initialPlaylist');
+    if (storedPlaylist) {
+      try {
+        hasAddedInitialTrack.current = true;
+        const playlistItems = JSON.parse(storedPlaylist);
+        if (Array.isArray(playlistItems) && playlistItems.length > 0) {
+          playlistItems.forEach(item => {
+            addSelectedToQueue(item);
+          });
+          sessionStorage.removeItem('initialPlaylist');
+          return;
+        }
+      } catch (e) {
+        console.error("Failed to parse initial playlist", e);
+      }
     }
-    
-    if (!hasAddedInitialTrack.current) {
+
+    // Fallback to single track from URL params
+    const initialTrack = searchParams.get('initialTrack');
+    if (initialTrack) {
       hasAddedInitialTrack.current = true;
       addSelectedToQueue({
         trackId: initialTrack,

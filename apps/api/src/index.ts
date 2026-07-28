@@ -4,6 +4,11 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Patch BigInt for JSON.stringify to prevent serialization errors
+(BigInt.prototype as any).toJSON = function () {
+  return this.toString();
+};
+
 import { db } from './db';
 import { authRoutes } from './modules/auth/auth.controller';
 import { spotifyRoutes } from './modules/auth/spotify.controller';
@@ -18,6 +23,7 @@ import { settingsRoutes } from './modules/settings/settings.controller';
 import { communityRoutes } from './modules/community/community.controller';
 import { communitySocialRoutes } from './modules/community/community-social.controller';
 import { friendsRoutes } from './modules/friends/friends.controller';
+import { adminRoutes } from './modules/admin/admin.routes';
 import { realtimeRoutes } from './realtime';
 import { cronRoutes } from './jobs/cron.controller';
 
@@ -48,6 +54,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/community-social', communitySocialRoutes);
 app.use('/api/friends', friendsRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/realtime', realtimeRoutes);
 app.use('/api/cron', cronRoutes);
 

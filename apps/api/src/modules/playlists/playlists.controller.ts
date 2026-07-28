@@ -114,7 +114,7 @@ router.delete('/:id', requireAuth, async (req: AuthenticatedRequest, res: Respon
 // ── POST /playlists/:id/songs ──────────────────────────────────────────────
 router.post('/:id/songs', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user!.userId;
-  const { songId } = req.body;
+  const { songId, title, artist, duration, thumbnail } = req.body;
 
   if (!songId) return res.status(400).json({ error: 'songId is required' });
 
@@ -124,18 +124,52 @@ router.post('/:id/songs', requireAuth, async (req: AuthenticatedRequest, res: Re
       return res.status(403).json({ error: 'Not authorized' });
     }
 
+    // Upsert Artist
+    let artistRecord = await db.artist.findFirst({ where: { name: artist || 'Unknown Artist' } });
+    if (!artistRecord) {
+      artistRecord = await db.artist.create({ 
+        data: { 
+          name: artist || 'Unknown Artist', 
+          slug: ((artist || 'Unknown Artist').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + Math.random().toString(36).substring(2, 7))
+        } 
+      });
+    }
+
+    // Upsert Song
+    let songRecord = await db.song.findUnique({ where: { id: songId } });
+    if (!songRecord) {
+      songRecord = await db.song.create({
+        data: {
+          id: songId, // Use YT trackId as the primary key
+          title: title || 'Unknown Title',
+          artistId: artistRecord.id,
+          slug: ((title || 'Unknown Title').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + songId),
+          durationMs: duration || 0,
+          youtubeId: songId,
+          coverUrl: thumbnail || ''
+        }
+      });
+    }
+
     const count = await db.playlistSong.count({ where: { playlistId: req.params.id } });
+
+    // Check if song is already in the playlist to prevent duplicates
+    const existing = await db.playlistSong.findFirst({ where: { playlistId: req.params.id, songId: songRecord.id } });
+    if (existing) {
+      return res.status(400).json({ error: 'Song is already in this playlist' });
+    }
 
     const entry = await db.playlistSong.create({
       data: {
         playlistId: req.params.id,
-        songId,
+        songId: songRecord.id,
         addedById: userId,
         position: count + 1,
       },
     });
     res.status(201).json(entry);
   } catch (error) {
+    console.error('Failed to add song:', error);
     res.status(500).json({ error: 'Failed to add song to playlist' });
   }
 });

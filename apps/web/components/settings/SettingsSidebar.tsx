@@ -9,6 +9,7 @@ import {
   ShieldCheck, Brain, Link as LinkIcon, Download, Globe, CreditCard, 
   BarChart, Settings, HelpCircle, LogOut 
 } from 'lucide-react';
+import { useSettingsContext } from './SettingsContext';
 
 const SECTIONS = [
   {
@@ -57,9 +58,10 @@ const SECTIONS = [
 
 export function SettingsSidebar() {
   const pathname = usePathname();
+  const { requestNavigation } = useSettingsContext();
 
   return (
-    <aside className="w-full lg:h-[calc(100vh-80px)] lg:w-72 shrink-0 overflow-x-auto lg:overflow-y-auto lg:border-r border-b lg:border-b-0 border-[rgba(255,255,255,0.05)] bg-[rgba(9,9,11,0.6)] backdrop-blur-xl lg:pb-20 scrollbar-hide z-10 shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
+    <aside className="w-full lg:h-screen lg:w-72 shrink-0 overflow-x-auto lg:overflow-y-auto lg:border-r border-b lg:border-b-0 border-[rgba(255,255,255,0.05)] bg-[rgba(9,9,11,0.6)] backdrop-blur-xl scrollbar-hide z-10 shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
       <div className="p-4 lg:p-8 pb-4 hidden lg:block sticky top-0 bg-[rgba(9,9,11,0.8)] backdrop-blur-md z-20 border-b border-[rgba(255,255,255,0.02)]">
         <h2 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">Settings</h2>
       </div>
@@ -79,17 +81,22 @@ export function SettingsSidebar() {
                   <li key={item.id}>
                     <Link
                       href={item.path}
+                      replace
+                      onClick={(e) => {
+                        e.preventDefault();
+                        requestNavigation(item.path);
+                      }}
                       className={cn(
                         "group flex items-center gap-3 rounded-full lg:rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-300 whitespace-nowrap relative overflow-hidden",
                         isActive 
-                          ? "bg-gradient-to-r from-[var(--color-accent-pink)]/20 to-[var(--color-accent-pink)]/5 text-[var(--color-accent-pink)] shadow-[inset_2px_0_0_var(--color-accent-pink)] lg:shadow-[inset_3px_0_0_var(--color-accent-pink)]" 
-                          : "text-gray-400 bg-white/5 lg:bg-transparent hover:bg-white/10 hover:text-white"
+                          ? "bg-[var(--color-primary)]/10 text-[var(--color-primary)] shadow-[inset_3px_0_0_var(--color-primary)]" 
+                          : "text-[#A0A0B8] bg-transparent hover:bg-white/5 hover:text-white"
                       )}
                     >
-                      {isActive && <div className="absolute inset-0 bg-[var(--color-accent-pink)]/10 blur-xl rounded-full"></div>}
+                      {isActive && <div className="absolute inset-0 bg-[var(--color-primary)]/10 blur-xl rounded-full"></div>}
                       <Icon size={18} className={cn(
                         "transition-all duration-300 relative z-10", 
-                        isActive ? "text-[var(--color-accent-pink)] drop-shadow-[0_0_8px_rgba(255,77,141,0.5)]" : "group-hover:scale-110"
+                        isActive ? "text-[var(--color-primary)] drop-shadow-[0_0_8px_rgba(29,185,84,0.3)]" : "group-hover:scale-110"
                       )} />
                       <span className="relative z-10 tracking-wide">{item.label}</span>
                     </Link>

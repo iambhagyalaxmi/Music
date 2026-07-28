@@ -297,6 +297,7 @@ friendsRoutes.get('/search', requireAuth, async (req: AuthenticatedRequest, res:
         id: { not: userId },
         OR: [
           { username: { contains: query, mode: 'insensitive' } },
+          { email: { contains: query, mode: 'insensitive' } },
           { profile: { displayName: { contains: query, mode: 'insensitive' } } }
         ]
       },

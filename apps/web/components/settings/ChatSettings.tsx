@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MessageSquare, Eye, Image as ImageIcon, Smile, FileImage } from 'lucide-react';
+import { MessageSquare, Eye, Image as ImageIcon, Smile, FileImage, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { API_URL } from '../../lib/api';
+import { SettingsCard } from './SettingsCard';
+import { useSettingsContext } from './SettingsContext';
 
 interface ToggleRowProps {
   title: string;
@@ -49,6 +51,21 @@ export function ChatSettings() {
     gifSupport: true,
   });
 
+  const { setIsDirty, saveFnRef } = useSettingsContext();
+
+  useEffect(() => {
+    if (settings?.chat) {
+      const isChanged = 
+        formData.readReceipts !== settings.chat.readReceipts ||
+        formData.typingIndicator !== settings.chat.typingIndicator ||
+        formData.messagePreview !== settings.chat.messagePreview ||
+        formData.autoDownloadMedia !== settings.chat.autoDownloadMedia ||
+        formData.emojiSuggestions !== settings.chat.emojiSuggestions ||
+        formData.gifSupport !== settings.chat.gifSupport;
+      setIsDirty(isChanged);
+    }
+  }, [formData, settings, setIsDirty]);
+
   useEffect(() => {
     if (settings?.chat) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -75,13 +92,17 @@ export function ChatSettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] });
-      alert('Chat settings updated!');
+      setIsDirty(false);
     }
   });
 
-  const handleSave = () => updateChat.mutate(formData);
+  useEffect(() => {
+    saveFnRef.current = async () => {
+      await updateChat.mutateAsync(formData);
+    };
+  }, [formData, updateChat, saveFnRef]);
 
-  if (isLoading) return <div className="animate-pulse text-[#A0A0B8]">Loading...</div>;
+  if (isLoading) return <div className="flex h-40 items-center justify-center"><Loader2 className="animate-spin text-[#A0A0B8]" size={32} /></div>;
 
   const toggleSetting = (key: keyof typeof formData) => {
     setFormData(prev => ({ ...prev, [key]: !prev[key as keyof typeof formData] }));
@@ -94,7 +115,8 @@ export function ChatSettings() {
         <p className="mt-2 text-[#A0A0B8]">Customize your messaging experience and privacy.</p>
       </div>
 
-      <div className="rounded-2xl border border-[#2A2A3C] bg-[#11111A] p-6 shadow-xl space-y-4">
+      <SettingsCard title="Messaging Preferences">
+        <div className="space-y-4">
         
         <ToggleRow 
           title="Read Receipts" 
@@ -143,17 +165,27 @@ export function ChatSettings() {
           icon={FileImage}
         />
 
-      </div>
+        </div>
 
-      <div className="flex justify-end pt-4">
-        <button
-          onClick={handleSave}
-          disabled={updateChat.isPending}
-          className="rounded-lg bg-[#1DB954] px-8 py-3 font-bold text-[#09090B] transition-transform hover:scale-105 disabled:opacity-50"
-        >
-          {updateChat.isPending ? 'Saving...' : 'Save Chat Settings'}
-        </button>
-      </div>
+        <div className="flex justify-end pt-6">
+          <button
+            onClick={() => updateChat.mutate(formData)}
+            disabled={updateChat.isPending || !settings || (
+              settings.chat &&
+              formData.readReceipts === settings.chat.readReceipts &&
+              formData.typingIndicator === settings.chat.typingIndicator &&
+              formData.messagePreview === settings.chat.messagePreview &&
+              formData.autoDownloadMedia === settings.chat.autoDownloadMedia &&
+              formData.emojiSuggestions === settings.chat.emojiSuggestions &&
+              formData.gifSupport === settings.chat.gifSupport
+            )}
+            className="flex items-center gap-2 rounded-lg bg-[#1DB954] px-6 py-2.5 font-bold text-[#09090B] transition-transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+          >
+            {updateChat.isPending && <Loader2 size={18} className="animate-spin" />}
+            {updateChat.isPending ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
+      </SettingsCard>
     </div>
   );
 }

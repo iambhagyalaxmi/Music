@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Headphones, DownloadCloud, Sliders } from 'lucide-react';
+import { Headphones, DownloadCloud, Sliders, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { API_URL } from '../../lib/api';
+import { SettingsCard } from './SettingsCard';
+import { useSettingsContext } from './SettingsContext';
 
 export function AudioSettings() {
   const queryClient = useQueryClient();
@@ -21,6 +23,18 @@ export function AudioSettings() {
     downloadQuality: 'HIGH',
     equalizerPreset: 'NORMAL',
   });
+
+  const { setIsDirty, saveFnRef } = useSettingsContext();
+
+  useEffect(() => {
+    if (settings?.audio) {
+      const isChanged = 
+        formData.streamingQuality !== settings.audio.streamingQuality ||
+        formData.downloadQuality !== settings.audio.downloadQuality ||
+        formData.equalizerPreset !== settings.audio.equalizerPreset;
+      setIsDirty(isChanged);
+    }
+  }, [formData, settings, setIsDirty]);
 
   useEffect(() => {
     if (settings?.audio) {
@@ -45,13 +59,17 @@ export function AudioSettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] });
-      alert('Audio settings updated!');
+      setIsDirty(false);
     }
   });
 
-  const handleSave = () => updateAudio.mutate(formData);
+  useEffect(() => {
+    saveFnRef.current = async () => {
+      await updateAudio.mutateAsync(formData);
+    };
+  }, [formData, updateAudio, saveFnRef]);
 
-  if (isLoading) return <div className="animate-pulse text-[#A0A0B8]">Loading...</div>;
+  if (isLoading) return <div className="flex h-40 items-center justify-center"><Loader2 className="animate-spin text-[#A0A0B8]" size={32} /></div>;
 
   const QUALITY_OPTIONS = [
     { id: 'LOW', label: 'Low (24kbit/s)' },
@@ -69,10 +87,10 @@ export function AudioSettings() {
         <p className="mt-2 text-[#A0A0B8]">Tune your listening experience for the best sound.</p>
       </div>
 
-      <div className="rounded-2xl border border-[#2A2A3C] bg-[#11111A] p-6 shadow-xl space-y-8">
-        
-        <div>
-          <h3 className="mb-4 text-lg font-bold text-white flex items-center gap-2"><Headphones size={20} className="text-[#1DB954]" /> Streaming Quality</h3>
+      <SettingsCard title="Audio Configuration">
+        <div className="space-y-8">
+          <div>
+            <h3 className="mb-4 text-lg font-bold text-white flex items-center gap-2"><Headphones size={20} className="text-[#1DB954]" /> Streaming Quality</h3>
           <div className="space-y-3">
             {QUALITY_OPTIONS.map(opt => (
               <label key={`stream-${opt.id}`} className={cn(
@@ -135,19 +153,25 @@ export function AudioSettings() {
               </button>
             ))}
           </div>
+          </div>
         </div>
 
-      </div>
-
-      <div className="flex justify-end pt-4">
-        <button
-          onClick={handleSave}
-          disabled={updateAudio.isPending}
-          className="rounded-lg bg-[#1DB954] px-8 py-3 font-bold text-[#09090B] transition-transform hover:scale-105 disabled:opacity-50"
-        >
-          {updateAudio.isPending ? 'Saving...' : 'Save Audio Settings'}
-        </button>
-      </div>
+        <div className="flex justify-end pt-6">
+          <button
+            onClick={() => updateAudio.mutate(formData)}
+            disabled={updateAudio.isPending || !settings || (
+              settings.audio &&
+              formData.streamingQuality === settings.audio.streamingQuality &&
+              formData.downloadQuality === settings.audio.downloadQuality &&
+              formData.equalizerPreset === settings.audio.equalizerPreset
+            )}
+            className="flex items-center gap-2 rounded-lg bg-[#1DB954] px-6 py-2.5 font-bold text-[#09090B] transition-transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+          >
+            {updateAudio.isPending && <Loader2 size={18} className="animate-spin" />}
+            {updateAudio.isPending ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
+      </SettingsCard>
     </div>
   );
 }

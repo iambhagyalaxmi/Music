@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../../db';
+import { mockPlaybackState, mockQueue } from '../../realtime';
 
 const router = Router();
 
@@ -19,14 +20,31 @@ router.get('/', async (req: Request, res: Response) => {
     });
     
     // Map them to match expected room frontend format
-    const formattedRooms = rooms.map((conv: any) => ({
-      id: conv.name || conv.id, // we use name as roomId for realtime socket
-      name: conv.name || 'Untitled Room',
-      members: conv.members.length,
-      host: conv.members.find((m: any) => m.isAdmin)?.user?.username || 'System',
-      isPublic: true,
-      nowPlaying: null // Managed by realtime socket in memory
-    }));
+    const formattedRooms = rooms.map((conv: any) => {
+      const roomId = conv.name || conv.id; // we use name as roomId for realtime socket
+      let imageUrl = null;
+      
+      const playback = mockPlaybackState[roomId];
+      if (playback && playback.trackId) {
+        const queue = mockQueue[roomId] || [];
+        const track = queue.find((t: any) => t.trackId === playback.trackId);
+        if (track && track.thumbnail) {
+          imageUrl = track.thumbnail;
+        } else if (track && track.cover) {
+          imageUrl = track.cover;
+        }
+      }
+
+      return {
+        id: roomId,
+        name: conv.name || 'Untitled Room',
+        members: conv.members.length,
+        host: conv.members.find((m: any) => m.isAdmin)?.user?.username || 'System',
+        isPublic: true,
+        imageUrl: imageUrl,
+        nowPlaying: null // Managed by realtime socket in memory
+      };
+    });
     
     res.json(formattedRooms);
   } catch (error) {

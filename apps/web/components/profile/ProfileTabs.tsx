@@ -4,6 +4,10 @@ import { cn } from '@/lib/utils';
 import { Activity, ListMusic, Users, Radio, Settings, Trophy } from 'lucide-react';
 import { AchievementsList } from './AchievementsList';
 import { ProfileSettings } from './ProfileSettings';
+import { ActivityFeed } from './ActivityFeed';
+import { ProfileRooms } from './ProfileRooms';
+import { ProfilePlaylists } from './ProfilePlaylists';
+import { ProfileFriends } from './ProfileFriends';
 
 interface ProfileTabsProps {
   isOwnProfile: boolean;
@@ -69,27 +73,19 @@ export function ProfileTabs({ isOwnProfile, profileId, activeTab, setActiveTab }
             transition={{ duration: 0.2 }}
           >
             {activeTab === 'activity' && (
-              <div style={{ textAlign: 'center', color: 'var(--color-text-secondary)' }}>
-                <p>Activity Feed coming soon...</p>
-              </div>
+              <ActivityFeed />
             )}
             
             {activeTab === 'playlists' && (
-              <div style={{ textAlign: 'center', color: 'var(--color-text-secondary)' }}>
-                <p>Playlists coming soon...</p>
-              </div>
+              <ProfilePlaylists />
             )}
             
             {activeTab === 'friends' && (
-              <div style={{ textAlign: 'center', color: 'var(--color-text-secondary)' }}>
-                <p>Friends list coming soon...</p>
-              </div>
+              <ProfileFriends />
             )}
             
             {activeTab === 'rooms' && (
-              <div style={{ textAlign: 'center', color: 'var(--color-text-secondary)' }}>
-                <p>Rooms history coming soon...</p>
-              </div>
+              <ProfileRooms />
             )}
             
             {activeTab === 'achievements' && (

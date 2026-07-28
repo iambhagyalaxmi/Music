@@ -3,7 +3,8 @@
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from '../lib/AuthContext';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { GlobalRoomProvider } from '../lib/GlobalRoomContext';
 import { GlobalPlayer } from '../components/GlobalPlayer';
 import { MobileNav } from '../components/MobileNav';
@@ -47,10 +48,46 @@ export function Providers({ children }: { children: React.ReactNode }) {
     return client;
   });
 
+function GlobalThemeLoader() {
+  const { data: settings } = useQuery({
+    queryKey: ['settings'],
+    queryFn: async () => {
+      const token = localStorage.getItem('soundsphere_token');
+      if (!token) return null;
+      // Use absolute URL since this runs on client and server depending on context, wait, API_URL needs to be imported or hardcoded if not. 
+      // But we can just use relative URL or process.env.NEXT_PUBLIC_API_URL
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/settings`, { 
+        headers: { 'Authorization': `Bearer ${token}` } 
+      });
+      return res.json();
+    }
+  });
+
+  useEffect(() => {
+    if (settings?.theme?.themeMode) {
+      const mode = settings.theme.themeMode;
+      if (mode === 'LIGHT') {
+        document.documentElement.setAttribute('data-theme', 'light');
+      } else if (mode === 'DARK') {
+        document.documentElement.removeAttribute('data-theme');
+      } else {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+        }
+      }
+    }
+  }, [settings]);
+
+  return null;
+}
+
   return (
     <QueryClientProvider client={queryClient}>
       <GoogleOAuthProvider clientId={clientId}>
         <AuthProvider>
+          <GlobalThemeLoader />
           <GlobalRoomProvider>
             <GlobalPlayer />
             {children}

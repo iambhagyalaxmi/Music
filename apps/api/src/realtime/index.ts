@@ -23,8 +23,8 @@ interface ChatMessage {
 }
 
 // In-memory mock player state (will reset on serverless cold starts)
-const mockPlaybackState: Record<string, { trackId: string | null; isPlaying: boolean; positionMs: number; updatedAt: number }> = {};
-const mockQueue: Record<string, any[]> = {};
+export const mockPlaybackState: Record<string, { trackId: string | null; isPlaying: boolean; positionMs: number; updatedAt: number }> = {};
+export const mockQueue: Record<string, any[]> = {};
 
 // ── Helper Functions ───────────────────────────────────────────────────────
 

@@ -16,7 +16,7 @@ profileRoutes.get('/', requireAuth, async (req, res) => {
         privacySettings: true,
         _count: {
           select: {
-            followers: true,
+            followedBy: true,
             following: true,
           }
         }
@@ -44,7 +44,7 @@ profileRoutes.get('/', requireAuth, async (req, res) => {
         consecutiveDays: (baseStats as any).streak, // Map streak to consecutiveDays for UI
       },
       privacy: user.privacySettings,
-      followersCount: user._count.followers,
+      followersCount: user._count.followedBy,
       followingCount: user._count.following,
       friendsCount: (baseStats as any).friends,
     });
@@ -131,7 +131,7 @@ profileRoutes.get('/:username', async (req, res) => {
       where: { username: req.params.username },
       include: {
         profile: true,
-        _count: { select: { followers: true, following: true } }
+        _count: { select: { followedBy: true, following: true } }
       }
     });
     
@@ -155,7 +155,7 @@ profileRoutes.get('/:username', async (req, res) => {
         avgDailyListening: (baseStats as any).averageDailyListening,
         consecutiveDays: (baseStats as any).streak,
       },
-      followersCount: user._count.followers,
+      followersCount: user._count.followedBy,
       followingCount: user._count.following,
     });
   } catch (error) {

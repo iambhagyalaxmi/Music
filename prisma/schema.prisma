@@ -1,12 +1,10 @@
 // ============================================================
-// SoundSphere - Production-Ready Prisma Schema
+// SoundSphere — Production Prisma Schema
 // PostgreSQL (NeonDB) | Prisma ORM
-// Designed for AI Music Streaming + Social Platform
 // ============================================================
 
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -46,16 +44,16 @@ enum FriendRequestStatus {
 }
 
 enum ReactionEmoji {
-  HEART       // ❤️
-  FIRE        // 🔥
-  LOVE_EYES   // 😍
-  LAUGH       // 😂
-  COOL        // 😎
-  CRY         // 😭
-  CLAP        // 👏
-  PARTY       // 🎉
-  THUMBS_UP   // 👍
-  THUMBS_DOWN // 👎
+  HEART
+  FIRE
+  LOVE_EYES
+  LAUGH
+  COOL
+  CRY
+  CLAP
+  PARTY
+  THUMBS_UP
+  THUMBS_DOWN
 }
 
 enum NotificationType {
@@ -67,6 +65,8 @@ enum NotificationType {
   PLAYLIST_SHARE
   NEW_RECOMMENDATION
   SYSTEM
+  COMMUNITY_ALERT
+  FAN_CLUB_INVITE
 }
 
 enum CallStatus {
@@ -113,66 +113,79 @@ model User {
   role          Role      @default(USER)
   emailVerified Boolean   @default(false)
   isActive      Boolean   @default(true)
-  /// Soft Delete — set instead of destroying the record
   deletedAt     DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  // Relations
-  profile                  UserProfile?
-  googleAccount            GoogleAccount?
-  spotifyAccount           SpotifyAccount?
-  sessions                 Session[]
-  refreshTokens            RefreshToken[]
-  subscription             Subscription?
-  playlists                Playlist[]
-  playlistFollowers        PlaylistFollower[]
-  playlistCollaborators    PlaylistCollaborator[]
-  likedSongs               LikedSong[]
-  favorites                Favorite[]
-  downloadedSongs          DownloadedSong[]
-  listeningHistory         ListeningHistory[]
-  recentlyPlayed           RecentlyPlayed[]
-  queue                    Queue[]
-  playbackHistory          PlaybackHistory[]
-  songReactions            SongReaction[]
-  videoReactions           VideoReaction[]
-  followedBy               Follower[]              @relation("UserFollowedBy")
-  following                Follower[]              @relation("UserFollowing")
-  sentFriendRequests       FriendRequest[]         @relation("SentRequests")
-  receivedFriendRequests   FriendRequest[]         @relation("ReceivedRequests")
-  friends                  Friend[]                @relation("UserFriends")
-  friendOf                 Friend[]                @relation("FriendOf")
-  blockedUsers             BlockedUser[]           @relation("Blocker")
-  blockedBy                BlockedUser[]           @relation("BlockedBy")
-  userActivity             UserActivity[]
-  conversationMembers      ConversationMember[]
-  messages                 Message[]
-  messageReactions         MessageReaction[]
-  messageReadStatuses      MessageReadStatus[]
-  typingStatuses           TypingStatus[]
-  pinnedMessages           PinnedMessage[]
-  callParticipants         CallParticipant[]
-  callLogsInitiated        CallLog[]               @relation("CallInitiator")
-  recommendations          Recommendation[]
-  userPreferences          UserPreference?
-  listeningPatterns        ListeningPattern[]
-  moodAnalyses             MoodAnalysis[]
-  recommendationFeedbacks  RecommendationFeedback[]
-  searchHistory            SearchHistory[]
-  notifications            Notification[]
-  notificationSettings     NotificationSettings?
-  pushTokens               PushToken[]
-  userDevices              UserDevice[]
-  activeSessions           ActiveSession[]
-  dailyStats               DailyListeningStats[]
-  weeklyStats              WeeklyListeningStats[]
-  monthlyStats             MonthlyListeningStats[]
-  userReports              UserReport[]            @relation("ReportedUser")
-  reportsMade              UserReport[]            @relation("ReportingUser")
-  auditLogs                AuditLog[]
-  communityPosts           CommunityPost[]
-  communityPostReactions   CommunityPostReaction[]
+  profile                 UserProfile?
+  googleAccount           GoogleAccount?
+  spotifyAccount          SpotifyAccount?
+  sessions                Session[]
+  refreshTokens           RefreshToken[]
+  subscription            Subscription?
+  playlists               Playlist[]
+  playlistFollowers       PlaylistFollower[]
+  playlistCollaborators   PlaylistCollaborator[]
+  likedSongs              LikedSong[]
+  favorites               Favorite[]
+  downloadedSongs         DownloadedSong[]
+  listeningHistory        ListeningHistory[]
+  recentlyPlayed          RecentlyPlayed[]
+  queue                   Queue[]
+  playbackHistory         PlaybackHistory[]
+  songReactions           SongReaction[]
+  videoReactions          VideoReaction[]
+  followedBy              Follower[]               @relation("UserFollowedBy")
+  following               Follower[]               @relation("UserFollowing")
+  sentFriendRequests      FriendRequest[]          @relation("SentRequests")
+  receivedFriendRequests  FriendRequest[]          @relation("ReceivedRequests")
+  friends                 Friend[]                 @relation("UserFriends")
+  friendOf                Friend[]                 @relation("FriendOf")
+  blockedUsers            BlockedUser[]            @relation("Blocker")
+  blockedBy               BlockedUser[]            @relation("BlockedBy")
+  userActivity            UserActivity[]
+  conversationMembers     ConversationMember[]
+  messages                Message[]
+  messageReactions        MessageReaction[]
+  messageReadStatuses     MessageReadStatus[]
+  typingStatuses          TypingStatus[]
+  pinnedMessages          PinnedMessage[]
+  callParticipants        CallParticipant[]
+  callLogsInitiated       CallLog[]                @relation("CallInitiator")
+  recommendations         Recommendation[]
+  userPreferences         UserPreference?
+  listeningPatterns       ListeningPattern[]
+  moodAnalyses            MoodAnalysis[]
+  recommendationFeedbacks RecommendationFeedback[]
+  searchHistory           SearchHistory[]
+  notifications           Notification[]
+  notificationSettings    NotificationSettings?
+  pushTokens              PushToken[]
+  userDevices             UserDevice[]
+  activeSessions          ActiveSession[]
+  dailyStats              DailyListeningStats[]
+  weeklyStats             WeeklyListeningStats[]
+  monthlyStats            MonthlyListeningStats[]
+  userReports             UserReport[]             @relation("ReportedUser")
+  reportsMade             UserReport[]             @relation("ReportingUser")
+  auditLogs               AuditLog[]
+  privacySettings         PrivacySettings?
+  userStatistics          UserStatistics?
+  userAchievements        UserAchievement[]
+  communityPosts          CommunityPost[]
+  communityPostReactions  CommunityPostReaction[]
+  createdPolls            CommunityPoll[]
+  pollVotes               CommunityPollVote[]
+  pollReactions           CommunityPollReaction[]
+  ownedFanClubs           FanClub[]
+  fanClubMemberships      FanClubMember[]
+
+  playbackSettings PlaybackSettings?
+  audioSettings    AudioSettings?
+  voiceSettings    VoiceSettings?
+  chatSettings     ChatSettings?
+  themeSettings    ThemeSettings?
+  languageSettings LanguageSettings?
 
   @@index([email])
   @@index([username])
@@ -238,7 +251,6 @@ model SpotifyAccount {
   @@map("spotify_accounts")
 }
 
-/// Hard delete — short-lived sessions
 model Session {
   id        String   @id @default(uuid())
   userId    String
@@ -256,7 +268,6 @@ model Session {
   @@map("sessions")
 }
 
-/// Hard delete — short-lived tokens
 model RefreshToken {
   id        String   @id @default(uuid())
   userId    String
@@ -281,12 +292,10 @@ model Subscription {
   tier               SubscriptionTier   @default(FREE_TRIAL)
   status             SubscriptionStatus @default(TRIAL)
   trialStartedAt     DateTime           @default(now())
-  /// Trial lasts exactly 30 days — set at signup
   trialEndsAt        DateTime
   currentPeriodStart DateTime?
   currentPeriodEnd   DateTime?
   cancelledAt        DateTime?
-  /// Stripe integration fields
   stripeCustomerId   String?            @unique
   stripeSubId        String?            @unique
   priceId            String?
@@ -297,7 +306,6 @@ model Subscription {
 
   @@index([status])
   @@index([trialEndsAt])
-  @@index([stripeCustomerId])
   @@map("subscriptions")
 }
 
@@ -315,7 +323,6 @@ model Artist {
   country    String?
   isVerified Boolean   @default(false)
   spotifyId  String?   @unique
-  /// Soft Delete
   deletedAt  DateTime?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
@@ -336,9 +343,8 @@ model Album {
   slug        String
   coverUrl    String?
   releaseDate DateTime?
-  albumType   String?   // "album", "single", "ep"
+  albumType   String?
   spotifyId   String?   @unique
-  /// Soft Delete
   deletedAt   DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -367,7 +373,7 @@ model Genre {
 model Language {
   id   String @id @default(uuid())
   name String @unique
-  code String @unique // ISO 639-1
+  code String @unique
 
   songLanguages SongLanguage[]
 
@@ -388,7 +394,6 @@ model Song {
   youtubeId   String?
   playCount   BigInt    @default(0)
   coverUrl    String?
-  /// Soft Delete
   deletedAt   DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -411,6 +416,7 @@ model Song {
   playbackHistory  PlaybackHistory[]
   songReactions    SongReaction[]
   recommendations  Recommendation[]
+  communityPosts   CommunityPost[]
 
   @@unique([artistId, slug])
   @@index([artistId])
@@ -424,8 +430,8 @@ model SongFile {
   id         String   @id @default(uuid())
   songId     String
   fileUrl    String
-  format     String   // "mp3", "flac", "aac"
-  bitrate    Int?     // kbps
+  format     String
+  bitrate    Int?
   fileSizeKb Int?
   isDefault  Boolean  @default(false)
   createdAt  DateTime @default(now())
@@ -445,7 +451,6 @@ model MusicVideo {
   thumbnailUrl String?
   durationMs   Int?
   viewCount    BigInt    @default(0)
-  /// Soft Delete
   deletedAt    DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -486,7 +491,7 @@ model SongLyric {
   content   String
   language  String?
   isSynced  Boolean  @default(false)
-  lrcData   Json?    // Timestamped LRC format as JSON array
+  lrcData   Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -519,15 +524,15 @@ model Playlist {
   coverUrl    String?
   isPublic    Boolean   @default(true)
   isOfficial  Boolean   @default(false)
-  /// Soft Delete
   deletedAt   DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  user          User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  songs         PlaylistSong[]
-  collaborators PlaylistCollaborator[]
-  followers     PlaylistFollower[]
+  user           User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  songs          PlaylistSong[]
+  collaborators  PlaylistCollaborator[]
+  followers      PlaylistFollower[]
+  communityPosts CommunityPost[]
 
   @@index([userId])
   @@index([deletedAt])
@@ -585,7 +590,7 @@ model Follower {
   followingId String
   createdAt   DateTime @default(now())
 
-  follower  User @relation("UserFollowing",  fields: [followerId],  references: [id], onDelete: Cascade)
+  follower  User @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
   following User @relation("UserFollowedBy", fields: [followingId], references: [id], onDelete: Cascade)
 
   @@id([followerId, followingId])
@@ -602,7 +607,7 @@ model FriendRequest {
   createdAt  DateTime            @default(now())
   updatedAt  DateTime            @updatedAt
 
-  sender   User @relation("SentRequests",     fields: [senderId],   references: [id], onDelete: Cascade)
+  sender   User @relation("SentRequests", fields: [senderId], references: [id], onDelete: Cascade)
   receiver User @relation("ReceivedRequests", fields: [receiverId], references: [id], onDelete: Cascade)
 
   @@unique([senderId, receiverId])
@@ -615,8 +620,8 @@ model Friend {
   friendId  String
   createdAt DateTime @default(now())
 
-  user   User @relation("UserFriends", fields: [userId],   references: [id], onDelete: Cascade)
-  friend User @relation("FriendOf",    fields: [friendId], references: [id], onDelete: Cascade)
+  user   User @relation("UserFriends", fields: [userId], references: [id], onDelete: Cascade)
+  friend User @relation("FriendOf", fields: [friendId], references: [id], onDelete: Cascade)
 
   @@id([userId, friendId])
   @@index([userId])
@@ -629,7 +634,7 @@ model BlockedUser {
   reason    String?
   createdAt DateTime @default(now())
 
-  blocker User @relation("Blocker",   fields: [blockerId], references: [id], onDelete: Cascade)
+  blocker User @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
   blocked User @relation("BlockedBy", fields: [blockedId], references: [id], onDelete: Cascade)
 
   @@id([blockerId, blockedId])
@@ -649,48 +654,6 @@ model UserActivity {
   @@index([userId])
   @@index([createdAt])
   @@map("user_activity")
-}
-
-// ============================================================
-// MODULE: COMMUNITY
-// ============================================================
-
-model CommunityPost {
-  id               String    @id @default(uuid())
-  userId           String
-  content          String
-  tags             String[]  @default([])
-  parentId         String?
-  fanClubId        String?
-  sharedSongId     String?
-  sharedPlaylistId String?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-
-  user      User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parent    CommunityPost?          @relation("PostReplies", fields: [parentId], references: [id], onDelete: SetNull)
-  replies   CommunityPost[]         @relation("PostReplies")
-  reactions CommunityPostReaction[]
-
-  @@index([userId])
-  @@index([parentId])
-  @@index([createdAt])
-  @@map("community_posts")
-}
-
-model CommunityPostReaction {
-  id        String        @id @default(uuid())
-  postId    String
-  userId    String
-  emoji     ReactionEmoji
-  createdAt DateTime      @default(now())
-
-  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([postId, userId])
-  @@index([postId])
-  @@map("community_post_reactions")
 }
 
 // ============================================================
@@ -727,10 +690,9 @@ model VideoReaction {
   @@map("video_reactions")
 }
 
-/// Materialized summary for O(1) reaction count lookups
 model ReactionSummary {
   id         String        @id @default(uuid())
-  targetType String        // "song" | "video"
+  targetType String
   targetId   String
   emoji      ReactionEmoji
   count      Int           @default(0)
@@ -781,7 +743,7 @@ model Message {
   senderId       String
   type           MessageType @default(TEXT)
   content        String?
-  metadata       Json?       // file URL, song reference, etc.
+  metadata       Json?
   replyToId      String?
   isEdited       Boolean     @default(false)
   createdAt      DateTime    @default(now())
@@ -791,8 +753,8 @@ model Message {
   sender          User                @relation(fields: [senderId], references: [id], onDelete: Restrict)
   replyTo         Message?            @relation("Replies", fields: [replyToId], references: [id], onDelete: SetNull)
   replies         Message[]           @relation("Replies")
-  reactions       MessageReaction[]   // Hard delete for ephemeral reactions
-  readStatuses    MessageReadStatus[] // Hard delete
+  reactions       MessageReaction[]
+  readStatuses    MessageReadStatus[]
   attachments     Attachment[]
   deletedMessages DeletedMessage[]
   pinnedMessages  PinnedMessage[]
@@ -802,7 +764,6 @@ model Message {
   @@map("messages")
 }
 
-/// Hard delete — ephemeral emoji reactions on messages
 model MessageReaction {
   id        String        @id @default(uuid())
   messageId String
@@ -833,7 +794,6 @@ model Attachment {
   @@map("attachments")
 }
 
-/// Hard delete — ephemeral read receipts
 model MessageReadStatus {
   messageId String
   userId    String
@@ -846,7 +806,6 @@ model MessageReadStatus {
   @@map("message_read_statuses")
 }
 
-/// Hard delete — ephemeral typing indicators (short-lived socket data)
 model TypingStatus {
   conversationId String
   userId         String
@@ -905,13 +864,13 @@ model CallSession {
 }
 
 model CallParticipant {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   callSessionId String
   userId        String
-  joinedAt      DateTime @default(now())
+  joinedAt      DateTime  @default(now())
   leftAt        DateTime?
-  isMuted       Boolean  @default(false)
-  isCameraOn    Boolean  @default(false)
+  isMuted       Boolean   @default(false)
+  isCameraOn    Boolean   @default(false)
 
   callSession CallSession @relation(fields: [callSessionId], references: [id], onDelete: Cascade)
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -935,7 +894,6 @@ model CallLog {
   @@map("call_logs")
 }
 
-/// Hard delete — ephemeral WebRTC signaling data (only needed during active call)
 model ICECandidate {
   id            String   @id @default(uuid())
   callSessionId String
@@ -951,8 +909,6 @@ model ICECandidate {
 
 // ============================================================
 // MODULE 9: LISTENING HISTORY
-// NOTE: Apply PostgreSQL RANGE partitioning on listenedAt
-// in the migration SQL file (see database_architecture.md)
 // ============================================================
 
 model ListeningHistory {
@@ -962,7 +918,7 @@ model ListeningHistory {
   listenedAt DateTime @default(now())
   durationMs Int?
   completed  Boolean  @default(false)
-  sourceType String?  // "search" | "playlist" | "recommendation" | "radio"
+  sourceType String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
   song Song @relation(fields: [songId], references: [id], onDelete: Cascade)
@@ -1027,7 +983,6 @@ model DownloadedSong {
   @@map("downloaded_songs")
 }
 
-/// Hard delete — ephemeral session queue
 model Queue {
   id       String   @id @default(uuid())
   userId   String
@@ -1100,8 +1055,8 @@ model UserPreference {
   favoriteGenres  String[]
   favoriteArtists String[]
   moodPreferences Json?
-  tempo           String?  // "slow" | "moderate" | "fast"
-  energy          String?  // "low" | "medium" | "high"
+  tempo           String?
+  energy          String?
   language        String?
   updatedAt       DateTime @updatedAt
 
@@ -1129,7 +1084,7 @@ model ListeningPattern {
 model MoodAnalysis {
   id         String   @id @default(uuid())
   userId     String
-  mood       String   // "happy" | "sad" | "energetic" | "calm"
+  mood       String
   confidence Float
   analyzedAt DateTime @default(now())
 
@@ -1144,7 +1099,7 @@ model RecommendationFeedback {
   userId           String
   recommendationId String?
   songId           String
-  feedback         String   // "like" | "dislike" | "skip" | "not_interested"
+  feedback         String
   createdAt        DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1218,12 +1173,11 @@ model NotificationSettings {
   @@map("notification_settings")
 }
 
-/// Hard delete — ephemeral device tokens (re-registered on each app launch)
 model PushToken {
   id        String   @id @default(uuid())
   userId    String
   token     String   @unique
-  platform  String   // "ios" | "android" | "web"
+  platform  String
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1240,7 +1194,7 @@ model UserDevice {
   id          String   @id @default(uuid())
   userId      String
   deviceName  String?
-  deviceType  String?  // "mobile" | "desktop" | "tablet" | "smart_tv"
+  deviceType  String?
   platform    String?
   osVersion   String?
   appVersion  String?
@@ -1254,7 +1208,6 @@ model UserDevice {
   @@map("user_devices")
 }
 
-/// Hard delete — ephemeral active session presence data
 model ActiveSession {
   id         String   @id @default(uuid())
   userId     String
@@ -1270,11 +1223,7 @@ model ActiveSession {
 }
 
 // ============================================================
-// MODULE 14: ANALYTICS (with PostgreSQL Partitioning)
-// NOTE: Prisma creates the base table. Apply partitioning via
-// raw SQL in migration files. See database_architecture.md
-// for the exact ALTER TABLE / CREATE TABLE PARTITION scripts.
-// Strategy: RANGE partition by (recorded_date) — monthly
+// MODULE 14: ANALYTICS
 // ============================================================
 
 model DailyListeningStats {
@@ -1332,7 +1281,7 @@ model MonthlyListeningStats {
 model TopArtist {
   id         String   @id @default(uuid())
   artistId   String
-  period     String   // "daily" | "weekly" | "monthly" | "alltime"
+  period     String
   rank       Int
   playCount  BigInt
   recordedAt DateTime @default(now())
@@ -1373,7 +1322,7 @@ model GenreStatistic {
 
 model Report {
   id          String       @id @default(uuid())
-  targetType  String       // "song" | "playlist" | "user" | "message"
+  targetType  String
   targetId    String
   reason      ReportReason
   description String?
@@ -1394,9 +1343,9 @@ model UserReport {
   reporterId String
   reportedId String
 
-  report   Report @relation(fields: [reportId],   references: [id], onDelete: Cascade)
+  report   Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
   reporter User   @relation("ReportingUser", fields: [reporterId], references: [id], onDelete: Cascade)
-  reported User   @relation("ReportedUser",  fields: [reportedId], references: [id], onDelete: Cascade)
+  reported User   @relation("ReportedUser", fields: [reportedId], references: [id], onDelete: Cascade)
 
   @@id([reportId, reporterId])
   @@map("user_reports")
@@ -1405,7 +1354,7 @@ model UserReport {
 model AuditLog {
   id        String   @id @default(uuid())
   userId    String?
-  action    String   // "CREATE" | "UPDATE" | "DELETE" | "LOGIN" | "LOGOUT"
+  action    String
   tableName String?
   recordId  String?
   oldData   Json?
@@ -1433,7 +1382,7 @@ model ContentModeration {
   id          String   @id @default(uuid())
   targetType  String
   targetId    String
-  action      String   // "flagged" | "removed" | "approved"
+  action      String
   reason      String?
   moderatorId String?
   createdAt   DateTime @default(now())
@@ -1441,4 +1390,308 @@ model ContentModeration {
   @@index([targetType, targetId])
   @@index([createdAt])
   @@map("content_moderation")
+}
+
+// ============================================================
+// MODULE 16: PROFILE EXTENSIONS
+// ============================================================
+
+model PrivacySettings {
+  userId                String   @id
+  profileVisibility     String   @default("PUBLIC") // PUBLIC, FRIENDS, PRIVATE
+  showListeningActivity Boolean  @default(true)
+  showOnlineStatus      Boolean  @default(true)
+  allowFriendRequests   Boolean  @default(true)
+  allowMessages         String   @default("EVERYONE") // EVERYONE, FRIENDS, NONE
+  allowVoiceCalls       String   @default("FRIENDS")
+  allowRoomInvites      String   @default("EVERYONE")
+  updatedAt             DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("privacy_settings")
+}
+
+model UserStatistics {
+  userId             String   @id
+  songsPlayed        BigInt   @default(0)
+  musicVideosWatched BigInt   @default(0)
+  totalListeningSecs BigInt   @default(0)
+  playlistsCreated   Int      @default(0)
+  roomsJoined        Int      @default(0)
+  voiceChatSecs      BigInt   @default(0)
+  emojiReactionsSent BigInt   @default(0)
+  messagesSent       BigInt   @default(0)
+  aiRecsUsed         Int      @default(0)
+  updatedAt          DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_statistics")
+}
+
+model Achievement {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  description String
+  iconUrl     String?
+  points      Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  userAchievements UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  userId        String
+  achievementId String
+  earnedAt      DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@id([userId, achievementId])
+  @@map("user_achievements")
+}
+
+// ============================================================
+// MODULE 17: SETTINGS
+// ============================================================
+
+model PlaybackSettings {
+  userId               String   @id
+  autoPlay             Boolean  @default(true)
+  crossfadeMs          Int      @default(0)
+  gaplessPlayback      Boolean  @default(true)
+  normalizeVolume      Boolean  @default(true)
+  autoplaySimilarSongs Boolean  @default(true)
+  repeatMode           String   @default("OFF") // OFF, ALL, ONE
+  shuffleMode          Boolean  @default(false)
+  defaultVolume        Int      @default(80)
+  videoAutoPlay        Boolean  @default(true)
+  lyricsDisplay        Boolean  @default(true)
+  updatedAt            DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("playback_settings")
+}
+
+model AudioSettings {
+  userId           String   @id
+  streamingQuality String   @default("HIGH") // LOW, MEDIUM, HIGH, LOSSLESS
+  downloadQuality  String   @default("HIGH")
+  equalizerPreset  String   @default("NORMAL")
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("audio_settings")
+}
+
+model VoiceSettings {
+  userId              String   @id
+  microphoneId        String?
+  speakerId           String?
+  noiseCancellation   Boolean  @default(true)
+  echoCancellation    Boolean  @default(true)
+  pushToTalk          Boolean  @default(false)
+  autoGainControl     Boolean  @default(true)
+  voiceActivityDetect Boolean  @default(true)
+  updatedAt           DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("voice_settings")
+}
+
+model ChatSettings {
+  userId            String   @id
+  readReceipts      Boolean  @default(true)
+  typingIndicator   Boolean  @default(true)
+  messagePreview    Boolean  @default(true)
+  autoDownloadMedia Boolean  @default(true)
+  chatBackground    String?
+  emojiSuggestions  Boolean  @default(true)
+  gifSupport        Boolean  @default(true)
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("chat_settings")
+}
+
+model ThemeSettings {
+  userId           String   @id
+  themeMode        String   @default("SYSTEM") // LIGHT, DARK, SYSTEM
+  accentColor      String   @default("#1DB954")
+  fontSize         String   @default("MEDIUM") // SMALL, MEDIUM, LARGE
+  compactMode      Boolean  @default(false)
+  sidebarPosition  String   @default("LEFT") // LEFT, RIGHT
+  enableAnimations Boolean  @default(true)
+  reduceMotion     Boolean  @default(false)
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("theme_settings")
+}
+
+model LanguageSettings {
+  userId          String   @id
+  language        String   @default("en-US")
+  country         String   @default("US")
+  timeZone        String   @default("UTC")
+  dateFormat      String   @default("MM/DD/YYYY")
+  timeFormat      String   @default("12H") // 12H, 24H
+  regionalContent Boolean  @default(true)
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("language_settings")
+}
+
+// ============================================================
+// MODULE 18: COMMUNITY
+// ============================================================
+
+model CommunityPost {
+  id               String    @id @default(uuid())
+  userId           String
+  fanClubId        String?
+  parentId         String?
+  sharedSongId     String?
+  sharedPlaylistId String?
+  content          String
+  tags             String[]
+  deletedAt        DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user           User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reactions      CommunityPostReaction[]
+  parent         CommunityPost?          @relation("PostComments", fields: [parentId], references: [id], onDelete: Cascade)
+  comments       CommunityPost[]         @relation("PostComments")
+  fanClub        FanClub?                @relation(fields: [fanClubId], references: [id], onDelete: Cascade)
+  sharedSong     Song?                   @relation(fields: [sharedSongId], references: [id], onDelete: SetNull)
+  sharedPlaylist Playlist?               @relation(fields: [sharedPlaylistId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([fanClubId])
+  @@index([parentId])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@map("community_posts")
+}
+
+model CommunityPostReaction {
+  id        String        @id @default(uuid())
+  postId    String
+  userId    String
+  emoji     ReactionEmoji
+  createdAt DateTime      @default(now())
+
+  post CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, userId])
+  @@index([postId, emoji])
+  @@map("community_post_reactions")
+}
+
+model FanClub {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  ownerId     String
+  deletedAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  owner   User            @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  members FanClubMember[]
+  posts   CommunityPost[]
+
+  @@index([ownerId])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@map("fan_clubs")
+}
+
+model FanClubMember {
+  fanClubId String
+  userId    String
+  joinedAt  DateTime @default(now())
+
+  fanClub FanClub @relation(fields: [fanClubId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([fanClubId, userId])
+  @@index([userId])
+  @@index([fanClubId])
+  @@map("fan_club_members")
+}
+
+model CommunityPoll {
+  id        String    @id @default(uuid())
+  question  String
+  creatorId String
+  expiresAt DateTime?
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  creator   User                    @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  options   CommunityPollOption[]
+  reactions CommunityPollReaction[]
+
+  @@index([creatorId])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@map("community_polls")
+}
+
+model CommunityPollOption {
+  id     String @id @default(uuid())
+  pollId String
+  text   String
+
+  poll  CommunityPoll       @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  votes CommunityPollVote[]
+
+  @@index([pollId])
+  @@map("community_poll_options")
+}
+
+model CommunityPollVote {
+  id        String   @id @default(uuid())
+  optionId  String
+  userId    String
+  createdAt DateTime @default(now())
+
+  option CommunityPollOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  user   User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([optionId, userId])
+  @@index([optionId])
+  @@index([userId])
+  @@map("community_poll_votes")
+}
+
+model CommunityPollReaction {
+  id        String        @id @default(uuid())
+  pollId    String
+  userId    String
+  emoji     ReactionEmoji
+  createdAt DateTime      @default(now())
+
+  poll CommunityPoll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+  user User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([pollId, userId])
+  @@index([pollId, emoji])
+  @@map("community_poll_reactions")
 }

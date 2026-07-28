@@ -87,13 +87,59 @@ router.get('/history', requireAuth, async (req: Request, res: Response) => {
       take: 10
     });
 
-    // We only have videoId in metadata. We'd ideally fetch details from YTMusic,
-    // but for now we return the raw IDs to avoid hitting API rate limits.
-    // The frontend can fetch metadata if needed, or we just rely on what's there.
-    res.json({ items: history });
+    const enrichedHistory = await Promise.all(history.map(async (item: any) => {
+      const videoId = (item.metadata as any)?.videoId;
+      if (!videoId) return item;
+      try {
+        if (!isInitialized) await initializeYTMusic();
+        // searchSongs or searchVideos might be needed if getSong fails for videos, but we can try getSong
+        // Actually, ytmusic-api's getSong works for videoIds too.
+        const details = await ytmusic.getSong(videoId);
+        return {
+          ...item,
+          title: details.name,
+          artist: details.artist?.name || 'Unknown Artist',
+          cover: details.thumbnails[details.thumbnails.length - 1]?.url || `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+        };
+      } catch (e) {
+        // Fallback if metadata fails
+        return {
+          ...item,
+          title: `Track ${videoId.substring(0, 5)}`,
+          artist: 'YouTube Music',
+          cover: `https://img.youtube.com/vi/${videoId}/default.jpg`
+        };
+      }
+    }));
+
+    res.json({ items: enrichedHistory });
   } catch (error) {
     console.error('Failed to fetch history:', error);
     res.status(500).json({ error: 'Failed to fetch history' });
+  }
+});
+
+router.get('/explore', async (req: Request, res: Response) => {
+  const category = (req.query.category as string) || 'trending';
+  try {
+    if (!isInitialized) await initializeYTMusic();
+    
+    let query = 'trending global hits';
+    if (category === 'new_releases') query = 'new music releases';
+    if (category === 'charts') query = 'top charts';
+    
+    const songs = await ytmusic.searchSongs(query);
+    const formatted = songs.slice(0, 50).map(s => ({
+      trackId: s.videoId,
+      title: s.name,
+      artist: s.artist?.name || 'Unknown Artist',
+      cover: s.thumbnails[s.thumbnails.length - 1]?.url || ''
+    }));
+    
+    res.json({ items: formatted });
+  } catch (error) {
+    console.error('YTMusic Explore Error:', error);
+    res.status(500).json({ error: 'Failed to explore YouTube Music' });
   }
 });
 

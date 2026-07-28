@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Volume2, FastForward, Repeat, Shuffle, AudioLines } from 'lucide-react';
+import { Volume2, FastForward, Repeat, Shuffle, AudioLines, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { API_URL } from '../../lib/api';
+import { SettingsCard } from './SettingsCard';
+import { useSettingsContext } from './SettingsContext';
 
 interface ToggleRowProps {
   title: string;
@@ -48,6 +50,20 @@ export function PlaybackSettings() {
     autoplaySimilarSongs: true,
   });
 
+  const { setIsDirty, saveFnRef } = useSettingsContext();
+
+  useEffect(() => {
+    if (settings?.playback) {
+      const isChanged = 
+        formData.autoPlay !== settings.playback.autoPlay ||
+        formData.crossfadeMs !== settings.playback.crossfadeMs ||
+        formData.gaplessPlayback !== settings.playback.gaplessPlayback ||
+        formData.normalizeVolume !== settings.playback.normalizeVolume ||
+        formData.autoplaySimilarSongs !== settings.playback.autoplaySimilarSongs;
+      setIsDirty(isChanged);
+    }
+  }, [formData, settings, setIsDirty]);
+
   useEffect(() => {
     if (settings?.playback) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -73,13 +89,17 @@ export function PlaybackSettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] });
-      alert('Playback settings updated!');
+      setIsDirty(false);
     }
   });
 
-  const handleSave = () => updatePlayback.mutate(formData);
+  useEffect(() => {
+    saveFnRef.current = async () => {
+      await updatePlayback.mutateAsync(formData);
+    };
+  }, [formData, updatePlayback, saveFnRef]);
 
-  if (isLoading) return <div className="animate-pulse text-[#A0A0B8]">Loading...</div>;
+  if (isLoading) return <div className="flex h-40 items-center justify-center"><Loader2 className="animate-spin text-[#A0A0B8]" size={32} /></div>;
 
   const toggleSetting = (key: keyof typeof formData) => {
     setFormData(prev => ({ ...prev, [key]: !prev[key] }));
@@ -92,7 +112,8 @@ export function PlaybackSettings() {
         <p className="mt-2 text-[#A0A0B8]">Control how your music transitions and plays continuously.</p>
       </div>
 
-      <div className="rounded-2xl border border-[#2A2A3C] bg-[#11111A] p-6 shadow-xl space-y-4">
+      <SettingsCard title="Playback Controls">
+        <div className="space-y-4">
         
         <ToggleRow 
           title="Auto Play" 
@@ -148,17 +169,26 @@ export function PlaybackSettings() {
           </div>
         </div>
 
-      </div>
+        </div>
 
-      <div className="flex justify-end pt-4">
-        <button
-          onClick={handleSave}
-          disabled={updatePlayback.isPending}
-          className="rounded-lg bg-[#1DB954] px-8 py-3 font-bold text-[#09090B] transition-transform hover:scale-105 disabled:opacity-50"
-        >
-          {updatePlayback.isPending ? 'Saving...' : 'Save Playback Settings'}
-        </button>
-      </div>
+        <div className="flex justify-end pt-6">
+          <button
+            onClick={() => updatePlayback.mutate(formData)}
+            disabled={updatePlayback.isPending || !settings || (
+              settings.playback &&
+              formData.autoPlay === settings.playback.autoPlay &&
+              formData.crossfadeMs === settings.playback.crossfadeMs &&
+              formData.gaplessPlayback === settings.playback.gaplessPlayback &&
+              formData.normalizeVolume === settings.playback.normalizeVolume &&
+              formData.autoplaySimilarSongs === settings.playback.autoplaySimilarSongs
+            )}
+            className="flex items-center gap-2 rounded-lg bg-[#1DB954] px-6 py-2.5 font-bold text-[#09090B] transition-transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+          >
+            {updatePlayback.isPending && <Loader2 size={18} className="animate-spin" />}
+            {updatePlayback.isPending ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
+      </SettingsCard>
     </div>
   );
 }

@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Mic, Volume2, Settings2, ShieldCheck, Zap } from 'lucide-react';
+import { Mic, Volume2, Settings2, ShieldCheck, Zap, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { API_URL } from '../../lib/api';
+import { SettingsCard } from './SettingsCard';
+import { useSettingsContext } from './SettingsContext';
 
 interface ToggleRowProps {
   title: string;
@@ -50,6 +52,22 @@ export function VoiceSettings() {
     voiceActivityDetect: true,
   });
 
+  const { setIsDirty, saveFnRef } = useSettingsContext();
+
+  useEffect(() => {
+    if (settings?.voice) {
+      const isChanged = 
+        formData.microphoneId !== (settings.voice.microphoneId || 'default') ||
+        formData.speakerId !== (settings.voice.speakerId || 'default') ||
+        formData.noiseCancellation !== settings.voice.noiseCancellation ||
+        formData.echoCancellation !== settings.voice.echoCancellation ||
+        formData.pushToTalk !== settings.voice.pushToTalk ||
+        formData.autoGainControl !== settings.voice.autoGainControl ||
+        formData.voiceActivityDetect !== settings.voice.voiceActivityDetect;
+      setIsDirty(isChanged);
+    }
+  }, [formData, settings, setIsDirty]);
+
   useEffect(() => {
     if (settings?.voice) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -77,13 +95,17 @@ export function VoiceSettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] });
-      alert('Voice settings updated!');
+      setIsDirty(false);
     }
   });
 
-  const handleSave = () => updateVoice.mutate(formData);
+  useEffect(() => {
+    saveFnRef.current = async () => {
+      await updateVoice.mutateAsync(formData);
+    };
+  }, [formData, updateVoice, saveFnRef]);
 
-  if (isLoading) return <div className="animate-pulse text-[#A0A0B8]">Loading...</div>;
+  if (isLoading) return <div className="flex h-40 items-center justify-center"><Loader2 className="animate-spin text-[#A0A0B8]" size={32} /></div>;
 
   const toggleSetting = (key: keyof typeof formData) => {
     setFormData(prev => ({ ...prev, [key]: !prev[key as keyof typeof formData] }));
@@ -96,8 +118,7 @@ export function VoiceSettings() {
         <p className="mt-2 text-[#A0A0B8]">Configure your hardware and voice processing settings.</p>
       </div>
 
-      <div className="rounded-2xl border border-[#2A2A3C] bg-[#11111A] p-6 shadow-xl space-y-6">
-        
+      <SettingsCard title="Hardware & Processing">
         {/* Hardware Selection */}
         <div className="grid gap-6 sm:grid-cols-2">
           <div>
@@ -159,17 +180,27 @@ export function VoiceSettings() {
             onChange={() => toggleSetting('autoGainControl')} 
           />
         </div>
-      </div>
 
-      <div className="flex justify-end pt-4">
-        <button
-          onClick={handleSave}
-          disabled={updateVoice.isPending}
-          className="rounded-lg bg-[#1DB954] px-8 py-3 font-bold text-[#09090B] transition-transform hover:scale-105 disabled:opacity-50"
-        >
-          {updateVoice.isPending ? 'Saving...' : 'Save Voice Settings'}
-        </button>
-      </div>
+        <div className="flex justify-end pt-6">
+          <button
+            onClick={() => updateVoice.mutate(formData)}
+            disabled={updateVoice.isPending || !settings || (
+              settings.voice &&
+              formData.microphoneId === (settings.voice.microphoneId || 'default') &&
+              formData.speakerId === (settings.voice.speakerId || 'default') &&
+              formData.noiseCancellation === settings.voice.noiseCancellation &&
+              formData.echoCancellation === settings.voice.echoCancellation &&
+              formData.pushToTalk === settings.voice.pushToTalk &&
+              formData.autoGainControl === settings.voice.autoGainControl &&
+              formData.voiceActivityDetect === settings.voice.voiceActivityDetect
+            )}
+            className="flex items-center gap-2 rounded-lg bg-[#1DB954] px-6 py-2.5 font-bold text-[#09090B] transition-transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+          >
+            {updateVoice.isPending && <Loader2 size={18} className="animate-spin" />}
+            {updateVoice.isPending ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
+      </SettingsCard>
     </div>
   );
 }

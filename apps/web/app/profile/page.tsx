@@ -14,44 +14,7 @@ const fetchProfile = async () => {
   });
   
   if (!res.ok) {
-    // If not authenticated or error, return mock data for UI visualization
-    return {
-      profile: {
-        displayName: 'Bhagyalaxmi',
-        username: 'bhagyalaxmi_music',
-        isVerified: true,
-        bio: 'Music enthusiast. Lover of Synthwave and Lo-Fi.',
-        country: 'India',
-        joinedDate: 'July 2026',
-        website: 'https://bhagyalaxmi.dev',
-        socialLinks: { twitter: '@bhagya_music', instagram: '@bhagya.tunes' },
-        favoriteGenres: ['Lo-Fi', 'Synthwave', 'Indie'],
-        favoriteArtist: 'The Weeknd',
-        topGenre: 'Lo-Fi',
-        avatarUrl: 'https://ui-avatars.com/api/?name=B+L&background=1DB954&color=fff',
-        bannerUrl: null,
-      },
-      stats: {
-        songsPlayed: 14532,
-        musicVideosWatched: 320,
-        totalListeningSecs: 1087200, // 302 hours
-        roomsJoined: 42,
-        emojiReactionsSent: 1530,
-        totalPlaylists: 0,
-        friendsCount: 54,
-        songsLiked: 5230,
-        downloads: 245,
-        searches: 852,
-        streak: 32,
-        consecutiveDays: 45,
-        avgDailyListening: '2.5h',
-        favoriteGenre: 'Lo-Fi',
-        favoriteArtist: 'The Weeknd',
-      },
-      followersCount: 1205,
-      followingCount: 340,
-      isOwnProfile: true, // Mocking own profile
-    };
+    throw new Error('Failed to fetch profile. Please log in.');
   }
   
   const data = await res.json();
@@ -75,6 +38,17 @@ export default function ProfilePage() {
         <style dangerouslySetInnerHTML={{__html: `
           @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         `}} />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--color-bg)' }}>
+        <div style={{ textAlign: 'center', padding: 'var(--spacing-6)' }}>
+          <h2 style={{ color: 'var(--color-text-primary)', marginBottom: 'var(--spacing-2)' }}>Profile Unavailable</h2>
+          <p style={{ color: 'var(--color-text-secondary)' }}>Failed to load your profile or you are not logged in.</p>
+        </div>
       </div>
     );
   }

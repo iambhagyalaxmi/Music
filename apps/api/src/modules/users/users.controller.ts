@@ -32,6 +32,27 @@ router.get('/:username', async (req: AuthenticatedRequest, res: Response) => {
   }
 });
 
+// ── PUT /users/me ────────────────────────────────────────────────────────────
+router.put('/me', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+  const userId = req.user!.userId;
+  const { username, email } = req.body;
+
+  try {
+    const updatedUser = await db.user.update({
+      where: { id: userId },
+      data: { username, email },
+    });
+    res.json({
+      id: updatedUser.id,
+      username: updatedUser.username,
+      email: updatedUser.email,
+    });
+  } catch (error) {
+    console.error('Update User Error:', error);
+    res.status(500).json({ error: 'Failed to update user' });
+  }
+});
+
 // ── PUT /users/me/profile ──────────────────────────────────────────────────
 router.put('/me/profile', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const userId = req.user!.userId;

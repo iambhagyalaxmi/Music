@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Moon, Sun, Monitor, Palette, Layout, MousePointer2 } from 'lucide-react';
+import { Moon, Sun, Monitor, Palette, Layout, MousePointer2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { API_URL } from '../../lib/api';
+import { SettingsCard } from './SettingsCard';
+import { useSettingsContext } from './SettingsContext';
 
 export function AppearanceSettings() {
   const queryClient = useQueryClient();
@@ -23,6 +25,34 @@ export function AppearanceSettings() {
     enableAnimations: true,
   });
 
+  const { setIsDirty, saveFnRef } = useSettingsContext();
+
+  useEffect(() => {
+    if (settings?.theme) {
+      const isChanged = 
+        formData.themeMode !== settings.theme.themeMode ||
+        formData.accentColor !== settings.theme.accentColor ||
+        formData.compactMode !== settings.theme.compactMode ||
+        formData.enableAnimations !== settings.theme.enableAnimations;
+      setIsDirty(isChanged);
+    }
+  }, [formData, settings, setIsDirty]);
+
+  const applyTheme = (mode: string) => {
+    if (typeof document === 'undefined') return;
+    if (mode === 'LIGHT') {
+      document.documentElement.setAttribute('data-theme', 'light');
+    } else if (mode === 'DARK') {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+      }
+    }
+  };
+
   useEffect(() => {
     if (settings?.theme) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -32,6 +62,7 @@ export function AppearanceSettings() {
         compactMode: settings.theme.compactMode,
         enableAnimations: settings.theme.enableAnimations,
       });
+      applyTheme(settings.theme.themeMode);
     }
   }, [settings]);
 
@@ -47,13 +78,15 @@ export function AppearanceSettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['settings'] });
-      alert('Appearance updated successfully!');
+      setIsDirty(false);
     }
   });
 
-  const handleSave = () => {
-    updateTheme.mutate(formData);
-  };
+  useEffect(() => {
+    saveFnRef.current = async () => {
+      await updateTheme.mutateAsync(formData);
+    };
+  }, [formData, updateTheme, saveFnRef]);
 
   const THEME_OPTIONS = [
     { id: 'DARK', label: 'Dark', icon: Moon },
@@ -63,7 +96,7 @@ export function AppearanceSettings() {
 
   const COLORS = ['#1DB954', '#FF4D8D', '#8B5CF6', '#3B82F6', '#F59E0B', '#10B981'];
 
-  if (isLoading) return <div className="animate-pulse text-[#A0A0B8]">Loading...</div>;
+  if (isLoading) return <div className="flex h-40 items-center justify-center"><Loader2 className="animate-spin text-[#A0A0B8]" size={32} /></div>;
 
   return (
     <div className="space-y-8">
@@ -72,8 +105,7 @@ export function AppearanceSettings() {
         <p className="mt-2 text-[#A0A0B8]">Customize how the application looks and feels on your device.</p>
       </div>
 
-      <div className="rounded-2xl border border-[#2A2A3C] bg-[#11111A] p-6 shadow-xl">
-        <h3 className="mb-4 text-lg font-bold text-white flex items-center gap-2"><Palette size={20} className="text-[#1DB954]" /> Theme & Colors</h3>
+      <SettingsCard title="Theme & Colors">
         
         <div className="space-y-6">
           {/* Theme Mode */}
@@ -86,7 +118,10 @@ export function AppearanceSettings() {
                 return (
                   <button
                     key={theme.id}
-                    onClick={() => setFormData({ ...formData, themeMode: theme.id })}
+                    onClick={() => {
+                      setFormData({ ...formData, themeMode: theme.id });
+                      applyTheme(theme.id);
+                    }}
                     className={cn(
                       "flex flex-col items-center gap-3 rounded-xl border-2 p-4 transition-all hover:bg-[rgba(255,255,255,0.02)]",
                       isActive ? "border-[#1DB954] bg-[rgba(29,185,84,0.05)] text-[#1DB954]" : "border-[#2A2A3C] text-[#A0A0B8]"
@@ -118,10 +153,8 @@ export function AppearanceSettings() {
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="rounded-2xl border border-[#2A2A3C] bg-[#11111A] p-6 shadow-xl">
-        <h3 className="mb-4 text-lg font-bold text-white flex items-center gap-2"><Layout size={20} className="text-[#1DB954]" /> Interface</h3>
+      </SettingsCard>
+      <SettingsCard title="Interface">
         
         <div className="space-y-4">
           <label className="flex cursor-pointer items-center justify-between rounded-xl bg-[#09090B] p-4 border border-[#2A2A3C] transition-colors hover:border-[#1DB954]">
@@ -158,17 +191,24 @@ export function AppearanceSettings() {
             </div>
           </label>
         </div>
-      </div>
-
-      <div className="flex justify-end pt-4">
-        <button
-          onClick={handleSave}
-          disabled={updateTheme.isPending}
-          className="rounded-lg bg-[#1DB954] px-8 py-3 font-bold text-[#09090B] transition-transform hover:scale-105 disabled:opacity-50"
-        >
-          {updateTheme.isPending ? 'Saving...' : 'Save Appearance'}
-        </button>
-      </div>
+        
+        <div className="flex justify-end pt-6">
+          <button
+            onClick={() => updateTheme.mutate(formData)}
+            disabled={updateTheme.isPending || !settings || (
+              settings.theme &&
+              formData.themeMode === settings.theme.themeMode &&
+              formData.accentColor === settings.theme.accentColor &&
+              formData.compactMode === settings.theme.compactMode &&
+              formData.enableAnimations === settings.theme.enableAnimations
+            )}
+            className="flex items-center gap-2 rounded-lg bg-[#1DB954] px-6 py-2.5 font-bold text-[#09090B] transition-transform hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+          >
+            {updateTheme.isPending && <Loader2 size={18} className="animate-spin" />}
+            {updateTheme.isPending ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
+      </SettingsCard>
     </div>
   );
 }
