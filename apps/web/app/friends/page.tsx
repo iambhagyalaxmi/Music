@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Users, Activity, UserPlus, Headphones, UserCheck, Search, Mail, MessageCircle, PlayCircle, User, Check, X, Star, Heart, ListMusic, Play, Share, Trophy, Clock, Flame, Target, UserX, Send } from 'lucide-react';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { SubscriptionGuard } from '../../lib/SubscriptionGuard';
 import { API_URL } from '../../lib/api';
 
@@ -223,54 +224,10 @@ export default function FriendsPage() {
 
   return (
     <SubscriptionGuard>
-      <div className="dashboard-layout flex-col lg:flex-row pb-20 lg:pb-6">
+      <DashboardLayout>
+        <div className="flex-1 flex flex-col gap-6">
         
-        {/* Left Sidebar */}
-        <aside className="dashboard-sidebar-left hidden lg:flex w-64">
-
-          <div style={{ backgroundColor: 'var(--color-surface)', padding: 'var(--spacing-4) var(--spacing-6)', borderRadius: 'var(--radius-lg)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-            <h1 style={{ fontSize: 'var(--text-h2)', fontWeight: 'bold', background: 'linear-gradient(45deg, var(--color-accent-pink), #ff8a00)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>SoundSphere</h1>
-          </div>
-          <nav style={{ backgroundColor: 'var(--color-surface)', padding: 'var(--spacing-4)', borderRadius: 'var(--radius-lg)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', flex: 1 }}>
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)' }}>
-              <li>
-                <Link href="/dashboard" style={{ display: 'block', padding: 'var(--spacing-3) var(--spacing-4)', borderRadius: 'var(--radius-md)', color: 'var(--color-text-secondary)', textDecoration: 'none', fontWeight: 'bold', transition: 'background-color 0.2s, color 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.color = 'var(--color-text-primary)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--color-text-secondary)'; }}>
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link href="/community" style={{ display: 'block', padding: 'var(--spacing-3) var(--spacing-4)', borderRadius: 'var(--radius-md)', color: 'var(--color-text-secondary)', textDecoration: 'none', fontWeight: 'bold', transition: 'background-color 0.2s, color 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.color = 'var(--color-text-primary)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--color-text-secondary)'; }}>
-                  Community
-                </Link>
-              </li>
-              <li>
-                <Link href="/friends" style={{ display: 'block', padding: 'var(--spacing-3) var(--spacing-4)', borderRadius: 'var(--radius-md)', color: 'var(--color-text-primary)', textDecoration: 'none', fontWeight: 'bold', backgroundColor: 'rgba(255, 255, 255, 0.05)' }}>
-                  Friends
-                </Link>
-              </li>
-              <li>
-                <Link href="/rooms" style={{ display: 'block', padding: 'var(--spacing-3) var(--spacing-4)', borderRadius: 'var(--radius-md)', color: 'var(--color-text-secondary)', textDecoration: 'none', fontWeight: 'bold', transition: 'background-color 0.2s, color 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.color = 'var(--color-text-primary)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--color-text-secondary)'; }}>
-                  Rooms
-                </Link>
-              </li>
-              <li>
-                <Link href="/profile" style={{ display: 'block', padding: 'var(--spacing-3) var(--spacing-4)', borderRadius: 'var(--radius-md)', color: 'var(--color-text-secondary)', textDecoration: 'none', fontWeight: 'bold', transition: 'background-color 0.2s, color 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.color = 'var(--color-text-primary)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--color-text-secondary)'; }}>
-                  Profile
-                </Link>
-              </li>
-              <li>
-                <Link href="/settings" style={{ display: 'block', padding: 'var(--spacing-3) var(--spacing-4)', borderRadius: 'var(--radius-md)', color: 'var(--color-text-secondary)', textDecoration: 'none', fontWeight: 'bold', transition: 'background-color 0.2s, color 0.2s' }} onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)'; e.currentTarget.style.color = 'var(--color-text-primary)'; }} onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--color-text-secondary)'; }}>
-                  Settings
-                </Link>
-              </li>
-            </ul>
-          </nav>
-        </aside>
-
-        {/* Main Content Area */}
-        <main className="flex-1 flex flex-col gap-6">
-          
-          {/* Gradient Header */}
+        {/* Gradient Header */}
           <div style={{ padding: 'var(--spacing-6)', borderRadius: 'var(--radius-lg)', background: 'linear-gradient(135deg, rgba(255, 77, 141, 0.2) 0%, rgba(157, 78, 221, 0.2) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid rgba(255, 255, 255, 0.05)', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', top: '-50%', left: '-10%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(255,77,141,0.4) 0%, transparent 70%)', filter: 'blur(40px)', pointerEvents: 'none' }}></div>
             <div style={{ position: 'relative', zIndex: 1 }}>
@@ -1466,62 +1423,15 @@ export default function FriendsPage() {
             </div>
           )}
 
-        </main>
-      </div>
-      {openedPlaylistId && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setOpenedPlaylistId(null)}>
-          <div style={{ backgroundColor: 'var(--color-surface)', width: '90%', maxWidth: '500px', borderRadius: 'var(--radius-lg)', overflow: 'hidden', padding: 'var(--spacing-5)', boxShadow: '0 20px 40px rgba(0,0,0,0.3)', animation: 'slideUp 0.3s ease-out' }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--spacing-5)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ width: '48px', height: '48px', backgroundColor: openedPlaylistId === 'workout_mix' ? 'rgba(157, 78, 221, 0.2)' : 'rgba(255, 77, 141, 0.2)', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <ListMusic className="w-6 h-6" style={{ color: openedPlaylistId === 'workout_mix' ? 'var(--color-accent-purple)' : 'var(--color-accent-pink)' }} />
-                </div>
-                <div>
-                  <h3 style={{ fontSize: 'var(--text-h3)', margin: 0, fontWeight: 'bold' }}>
-                    {openedPlaylistId === 'workout_mix' ? 'Workout Mix' : 'Party Anthems'}
-                  </h3>
-                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)', margin: 0 }}>
-                    {openedPlaylistId === 'workout_mix' ? '12 tracks • 45 mins' : '24 tracks • 1 hr 15 mins'}
-                  </p>
-                </div>
-              </div>
-              <button onClick={() => setOpenedPlaylistId(null)} style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', padding: '8px' }}>
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--spacing-2)', maxHeight: '60vh', overflowY: 'auto' }}>
-              {[
-                { title: 'Blinding Lights', artist: 'The Weeknd' },
-                { title: 'Levitating', artist: 'Dua Lipa' },
-                { title: 'Cruel Summer', artist: 'Taylor Swift' },
-                { title: 'Midnight City', artist: 'M83' }
-              ].map((song, i) => (
-                <div key={i} onClick={() => setPlayingSharedSongId(playingSharedSongId === song.title ? null : song.title)} style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-3)', padding: 'var(--spacing-3)', backgroundColor: playingSharedSongId === song.title ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-md)', cursor: 'pointer', transition: 'background-color 0.2s' }} onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'} onMouseLeave={e => e.currentTarget.style.backgroundColor = playingSharedSongId === song.title ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)'}>
-                  <span style={{ color: playingSharedSongId === song.title ? 'var(--color-accent-pink)' : 'var(--color-text-secondary)', width: '20px', textAlign: 'center', fontSize: 'var(--text-sm)', fontWeight: 'bold' }}>{i + 1}</span>
-                  <div style={{ width: '40px', height: '40px', backgroundColor: playingSharedSongId === song.title ? 'var(--color-accent-pink)' : 'rgba(255,255,255,0.1)', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    {playingSharedSongId === song.title ? <Activity className="w-4 h-4 text-white" /> : <Play className="w-4 h-4 text-white" />}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <h4 style={{ margin: '0 0 2px 0', fontSize: 'var(--text-base)', fontWeight: 'bold', color: playingSharedSongId === song.title ? 'var(--color-accent-pink)' : 'inherit' }}>{song.title}</h4>
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>{song.artist}</p>
-                  </div>
-                  <button onClick={(e) => { e.stopPropagation(); toggleReactSharedSong(song.title); }} style={{ background: 'none', border: 'none', color: reactedSharedSongIds.includes(song.title) ? 'var(--color-accent-pink)' : 'var(--color-text-secondary)', cursor: 'pointer' }}>
-                    <Heart className="w-4 h-4" fill={reactedSharedSongIds.includes(song.title) ? 'currentColor' : 'none'} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
-      )}
 
-      <style dangerouslySetInnerHTML={{__html: `
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}} />
+        <style dangerouslySetInnerHTML={{__html: `
+          @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+        `}} />
+      </DashboardLayout>
     </SubscriptionGuard>
   );
 }

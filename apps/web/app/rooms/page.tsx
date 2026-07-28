@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useRouter } from 'next/navigation';
 import { SubscriptionGuard } from '../../lib/SubscriptionGuard';
 import { useAuth } from '../../lib/AuthContext';
@@ -96,52 +97,8 @@ export default function RoomsPage() {
 
   return (
     <SubscriptionGuard>
-      <div className="rooms-container flex-col lg:flex-row pb-20 lg:pb-0">
-        
-        {/* Left Sidebar */}
-        <aside className="sidebar hidden lg:flex">
-          <div className="sidebar-logo-container">
-            <h1 className="sidebar-logo">SoundSphere</h1>
-          </div>
-          <nav className="sidebar-nav">
-            <ul className="sidebar-menu">
-              <li>
-                <Link href="/dashboard" className="sidebar-link">
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link href="/community" className="sidebar-link">
-                  Community
-                </Link>
-              </li>
-              <li>
-                <Link href="/friends" className="sidebar-link">
-                  Friends
-                </Link>
-              </li>
-              <li>
-                <Link href="/rooms" className="sidebar-link active">
-                  Rooms
-                </Link>
-              </li>
-              <li>
-                <Link href="/profile" className="sidebar-link">
-                  Profile
-                </Link>
-              </li>
-              <li>
-                <Link href="/settings" className="sidebar-link">
-                  Settings
-                </Link>
-              </li>
-            </ul>
-          </nav>
-        </aside>
-
-        {/* Main Content Area */}
-        <main className="main-area">
-          
+      <DashboardLayout>
+        <div className="flex-1 flex flex-col gap-6 w-full">
           {/* Main CTA Section */}
           <div className="hero-section">
             <div className="hero-glow-1"></div>
@@ -272,8 +229,7 @@ export default function RoomsPage() {
               </div>
             )}
           </div>
-        </main>
-      </div>
+        </div>
 
       {/* Create Room Modal */}
       {isCreateModalOpen && (
@@ -389,6 +345,7 @@ export default function RoomsPage() {
           </div>
         </div>
       )}
+      </DashboardLayout>
     </SubscriptionGuard>
   );
 }
