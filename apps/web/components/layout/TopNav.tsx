@@ -6,6 +6,7 @@ import { Search, Bell, MessageSquare, Users, ChevronDown, LogOut, Settings, User
 import { useRouter } from 'next/navigation';
 import { API_URL } from '@/lib/api';
 import { useMusicStore } from '@/lib/store/useMusicStore';
+import { useDirectMessages } from '@/hooks/useDirectMessages';
 
 export function TopNav() {
   const { user, logout } = useAuth();
@@ -16,14 +17,80 @@ export function TopNav() {
   const [isSearching, setIsSearching] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showMessages, setShowMessages] = useState(false);
+  const [showFriends, setShowFriends] = useState(false);
+  
+  const defaultNotifications = [
+    { id: 1, title: 'Rahul invited you to a room', time: '2m ago', read: false },
+    { id: 2, title: 'Priya liked your playlist', time: '1h ago', read: false },
+    { id: 3, title: 'New release from Arijit Singh', time: '3h ago', read: false },
+    { id: 4, title: 'Amit sent you a friend request', time: '1d ago', read: false },
+  ];
+  
+  const [notifications, setNotifications] = useState(defaultNotifications);
+  
+  const { conversations, totalUnreadCount, markAllAsRead } = useDirectMessages();
+  
+  const [friends, setFriends] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchFriendRequests = async () => {
+      try {
+        const token = localStorage.getItem('soundsphere_token');
+        if (!token) return;
+        const res = await fetch(`${API_URL}/api/friends/requests/incoming`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setFriends(data.map((r: any) => ({
+            id: r.id,
+            name: r.sender.profile?.displayName || r.sender.username,
+            action: 'sent you a friend request'
+          })));
+        }
+      } catch (err) {}
+    };
+    fetchFriendRequests();
+  }, []);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('soundsphere_notifications');
+    if (saved) {
+      try {
+        setNotifications(JSON.parse(saved));
+      } catch(e) {}
+    }
+  }, []);
+
+  const updateNotifications = (newNotifs: any[]) => {
+    setNotifications(newNotifs);
+    localStorage.setItem('soundsphere_notifications', JSON.stringify(newNotifs));
+  };
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+  const friendRequestsCount = friends.length;
 
   const searchRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
+  const messageRef = useRef<HTMLDivElement>(null);
+  const friendRef = useRef<HTMLDivElement>(null);
   
-  // Close search on click outside
+  // Close popups on click outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowSearch(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
+      }
+      if (messageRef.current && !messageRef.current.contains(event.target as Node)) {
+        setShowMessages(false);
+      }
+      if (friendRef.current && !friendRef.current.contains(event.target as Node)) {
+        setShowFriends(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -133,30 +200,191 @@ export function TopNav() {
       </div>
 
       {/* Right Actions */}
-      <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
-        
-        {/* Icons */}
-        <div className="flex items-center gap-4 text-[var(--color-text-secondary)]">
-          <button className="relative hover:text-white transition-colors" title="Notifications">
-            <Bell size={20} />
-            <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-[var(--color-surface)]">
-              4
-            </span>
-          </button>
+        <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
           
-          <button className="relative hover:text-white transition-colors" title="Messages">
-            <MessageSquare size={20} />
-          </button>
-          
-          <button className="relative hover:text-white transition-colors" title="Friend Requests">
-            <Users size={20} />
-            <span className="absolute -top-1.5 -right-1.5 bg-[var(--color-accent-pink)] text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-[var(--color-surface)]">
-              2
-            </span>
-          </button>
-        </div>
+          {/* Icons */}
+          <div className="flex items-center gap-4 text-[var(--color-text-secondary)]">
+            {/* Notifications */}
+            <div className="relative" ref={notifRef}>
+              <button 
+                className={`relative transition-colors hover:scale-110 active:scale-95 ${showNotifications ? 'text-white' : 'hover:text-white'}`} 
+                title="Notifications"
+                onClick={() => setShowNotifications(!showNotifications)}
+              >
+                <Bell size={20} className={showNotifications ? "fill-current" : ""} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-[var(--color-surface)]">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
 
-        <div className="w-px h-6 bg-white/10 mx-2 hidden sm:block" />
+              {/* Notification Dropdown */}
+              {showNotifications && (
+                <div className="absolute right-0 mt-4 w-72 bg-[var(--color-surface)] border border-white/10 rounded-xl shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="px-4 py-2 border-b border-white/5 flex justify-between items-center">
+                    <h3 className="font-bold text-white">Notifications</h3>
+                    <button 
+                      className="text-xs text-[var(--color-accent-pink)] hover:underline"
+                      onClick={() => updateNotifications(notifications.map(n => ({ ...n, read: true })))}
+                    >
+                      Mark all as read
+                    </button>
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto">
+                    {notifications.length > 0 ? notifications.map((notif) => (
+                      <div 
+                        key={notif.id} 
+                        className={`px-4 py-3 hover:bg-white/5 cursor-pointer transition-colors border-b border-white/5 last:border-0 ${notif.read ? 'opacity-60' : ''}`}
+                        onClick={() => {
+                          updateNotifications(notifications.map(n => n.id === notif.id ? { ...n, read: true } : n));
+                        }}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`w-2 h-2 mt-1.5 rounded-full shrink-0 ${!notif.read ? 'bg-[var(--color-accent-pink)]' : 'bg-transparent'}`} />
+                          <div>
+                            <p className="text-sm text-white/90">{notif.title}</p>
+                            <p className="text-xs text-[var(--color-text-muted)] mt-1">{notif.time}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )) : (
+                      <div className="px-4 py-6 text-center text-[var(--color-text-muted)] text-sm">
+                        No notifications
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Messages */}
+            <div className="relative" ref={messageRef}>
+              <button 
+                className={`relative hover:text-white transition-colors hover:scale-110 active:scale-95 ${showMessages ? 'text-white' : ''}`} 
+                title="Messages"
+                onClick={() => setShowMessages(!showMessages)}
+              >
+                <MessageSquare size={20} className={showMessages ? "fill-current" : ""} />
+                {totalUnreadCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-blue-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-[var(--color-surface)]">
+                    {totalUnreadCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Messages Dropdown */}
+              {showMessages && (
+                <div className="absolute right-0 mt-4 w-72 bg-[var(--color-surface)] border border-white/10 rounded-xl shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="px-4 py-2 border-b border-white/5 flex justify-between items-center">
+                    <h3 className="font-bold text-white">Messages</h3>
+                    <button 
+                      className="text-xs text-[var(--color-accent-pink)] hover:underline"
+                      onClick={markAllAsRead}
+                    >
+                      Mark all as read
+                    </button>
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto">
+                    {conversations.length > 0 ? conversations.map((conv) => {
+                      const otherUser = conv.otherUser;
+                      const msg = conv.lastMessage;
+                      const isUnread = conv.unreadCount > 0;
+                      
+                      return (
+                        <div 
+                          key={conv.id} 
+                          className={`px-4 py-3 hover:bg-white/5 cursor-pointer transition-colors border-b border-white/5 last:border-0 ${!isUnread ? 'opacity-60' : ''}`}
+                          onClick={() => {
+                            setShowMessages(false);
+                            router.push(`/messages/${otherUser.id}`);
+                          }}
+                        >
+                          <div className="flex items-start gap-3">
+                            <img src={otherUser.profile?.avatarUrl || `https://ui-avatars.com/api/?name=${otherUser.username}&background=random`} alt={otherUser.username} className="w-8 h-8 rounded-full" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold text-white truncate">{otherUser.username}</p>
+                              <p className="text-xs text-white/70 mt-0.5 truncate">{msg?.content || 'Started a conversation'}</p>
+                              {msg && <p className="text-[10px] text-[var(--color-text-muted)] mt-1">{new Date(msg.createdAt).toLocaleDateString()}</p>}
+                            </div>
+                            {isUnread && (
+                              <div className="bg-blue-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full shrink-0">
+                                {conv.unreadCount}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }) : (
+                      <div className="px-4 py-6 text-center text-[var(--color-text-muted)] text-sm">
+                        No messages
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {/* Friend Requests */}
+            <div className="relative" ref={friendRef}>
+              <button 
+                className={`relative hover:text-white transition-colors hover:scale-110 active:scale-95 ${showFriends ? 'text-white' : ''}`} 
+                title="Friend Requests"
+                onClick={() => setShowFriends(!showFriends)}
+              >
+                <Users size={20} className={showFriends ? "text-[var(--color-accent-pink)]" : ""} />
+                {friendRequestsCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-[var(--color-accent-pink)] text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-[var(--color-surface)]">
+                    {friendRequestsCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Friends Dropdown */}
+              {showFriends && (
+                <div className="absolute right-0 mt-4 w-72 bg-[var(--color-surface)] border border-white/10 rounded-xl shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="px-4 py-2 border-b border-white/5 flex justify-between items-center">
+                    <h3 className="font-bold text-white">Friend Requests</h3>
+                    <button 
+                      className="text-xs text-[var(--color-text-muted)] hover:text-white"
+                      onClick={() => setFriends([])}
+                    >
+                      Clear all
+                    </button>
+                  </div>
+                  <div className="max-h-[300px] overflow-y-auto">
+                    {friends.length > 0 ? friends.map((friend) => (
+                      <div key={friend.id} className="px-4 py-3 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0">
+                        <div className="flex items-center gap-3">
+                          <img src={`https://ui-avatars.com/api/?name=${friend.name}&background=random`} alt={friend.name} className="w-8 h-8 rounded-full" />
+                          <div className="flex-1">
+                            <p className="text-sm font-bold text-white">{friend.name}</p>
+                            <p className="text-xs text-[var(--color-text-muted)]">{friend.action}</p>
+                          </div>
+                          {friend.action.includes('request') && (
+                            <div className="flex gap-1">
+                              <button 
+                                className="bg-[var(--color-accent-pink)] hover:bg-[#ff1493] text-white text-[10px] font-bold px-2 py-1 rounded"
+                                onClick={() => setFriends(friends.filter(f => f.id !== friend.id))}
+                              >
+                                Accept
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )) : (
+                      <div className="px-4 py-6 text-center text-[var(--color-text-muted)] text-sm">
+                        No friend requests
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+  
+          <div className="w-px h-6 bg-white/10 mx-2 hidden sm:block" />
 
         {/* Profile Dropdown */}
         <div className="relative">

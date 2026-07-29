@@ -1,11 +1,15 @@
 import React from 'react';
 import { Music, Clock, Users, Radio } from 'lucide-react';
 
-export function QuickStats() {
+interface QuickStatsProps {
+  friendsOnline?: number;
+}
+
+export function QuickStats({ friendsOnline = 0 }: QuickStatsProps) {
   const stats = [
     { label: 'Songs Played', value: '34', icon: Music, color: 'text-purple-400' },
     { label: 'Listening Time', value: '2h 41m', icon: Clock, color: 'text-blue-400' },
-    { label: 'Friends Online', value: '8', icon: Users, color: 'text-green-400' },
+    { label: 'Friends Online', value: friendsOnline.toString(), icon: Users, color: 'text-green-400' },
     { label: 'Active Rooms', value: '5', icon: Radio, color: 'text-orange-400' },
   ];
 

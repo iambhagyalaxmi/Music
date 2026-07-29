@@ -1,26 +1,40 @@
 "use client";
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useMusicStore } from '@/lib/store/useMusicStore';
 import YouTube from 'react-youtube';
 import { Play, Pause, SkipBack, SkipForward, Heart, Volume2, ListMusic, MonitorSpeaker, Mic2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function BottomPlayer() {
-  const { currentSong, isPlaying, togglePlay, progress, setProgress, playNext, playPrevious, volume } = useMusicStore();
+  const { currentSong, isPlaying, togglePlay, progress, setProgress, playNext, playPrevious, volume, setVolume } = useMusicStore();
   const ytRef = useRef<any>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const fallbackTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [isLiked, setIsLiked] = useState(false);
+  const [useFallback, setUseFallback] = useState(false);
+  
+  // Right side icon active states
+  const [showLyrics, setShowLyrics] = useState(false);
+  const [showQueue, setShowQueue] = useState(false);
+  const [showDevices, setShowDevices] = useState(false);
+  const [prevVolume, setPrevVolume] = useState(1);
 
   // Sync YouTube player with global state
   useEffect(() => {
-    if (ytRef.current) {
+    if (ytRef.current && !useFallback) {
       if (isPlaying) {
         ytRef.current.playVideo();
       } else {
         ytRef.current.pauseVideo();
       }
     }
-  }, [isPlaying, currentSong?.trackId]);
+  }, [isPlaying, currentSong?.trackId, useFallback]);
+
+  useEffect(() => {
+    // Reset fallback state when song changes
+    setUseFallback(false);
+  }, [currentSong?.trackId]);
 
   useEffect(() => {
     if (ytRef.current) {
@@ -31,21 +45,34 @@ export function BottomPlayer() {
   // Sync progress smoothly 10 times a second
   useEffect(() => {
     if (isPlaying) {
-      timerRef.current = setInterval(async () => {
-        if (ytRef.current && ytRef.current.getCurrentTime) {
-          const currentTime = await ytRef.current.getCurrentTime();
-          const duration = await ytRef.current.getDuration() || 240;
-          setProgress(currentTime / duration);
-        }
-      }, 100);
+      if (useFallback) {
+        const totalSeconds = currentSong?.duration || 240;
+        fallbackTimerRef.current = setInterval(() => {
+          setProgress(Math.min(1, useMusicStore.getState().progress + (0.1 / totalSeconds)));
+          
+          if (useMusicStore.getState().progress >= 1) {
+            playNext();
+          }
+        }, 100);
+      } else {
+        timerRef.current = setInterval(async () => {
+          if (ytRef.current && ytRef.current.getCurrentTime) {
+            const currentTime = await ytRef.current.getCurrentTime();
+            const duration = await ytRef.current.getDuration() || 240;
+            setProgress(currentTime / duration);
+          }
+        }, 100);
+      }
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
+      if (fallbackTimerRef.current) clearInterval(fallbackTimerRef.current);
     }
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
+      if (fallbackTimerRef.current) clearInterval(fallbackTimerRef.current);
     };
-  }, [isPlaying, setProgress]);
+  }, [isPlaying, setProgress, useFallback, currentSong?.duration, playNext]);
 
   const onReady = (event: any) => {
     ytRef.current = event.target;
@@ -86,8 +113,11 @@ export function BottomPlayer() {
           <span className="font-bold truncate text-white hover:underline cursor-pointer">{currentSong.title}</span>
           <span className="text-sm text-[var(--color-text-secondary)] truncate hover:underline cursor-pointer">{currentSong.artist}</span>
         </div>
-        <button className="text-[var(--color-text-muted)] hover:text-white transition-colors ml-2 hidden sm:block">
-          <Heart size={20} />
+        <button 
+          className={`transition-colors ml-2 hidden sm:block hover:scale-110 active:scale-95 ${isLiked ? 'text-[var(--color-accent-pink)]' : 'text-[var(--color-text-muted)] hover:text-white'}`}
+          onClick={() => setIsLiked(!isLiked)}
+        >
+          <Heart size={20} className={isLiked ? "fill-current" : ""} />
         </button>
       </div>
 
@@ -136,27 +166,58 @@ export function BottomPlayer() {
             {formatTime(1, currentSong.duration || 240)}
           </span>
         </div>
-      </div>
-
-      {/* Right: Extra Controls */}
-      <div className="flex items-center justify-end gap-4 w-1/4 min-w-[200px] text-[var(--color-text-secondary)]">
-        <button className="hover:text-white transition-colors hidden md:block" title="Lyrics">
-          <Mic2 size={18} />
-        </button>
-        <button className="hover:text-white transition-colors hidden md:block" title="Queue">
-          <ListMusic size={18} />
-        </button>
-        <button className="hover:text-white transition-colors hidden lg:block" title="Connect to a device">
-          <MonitorSpeaker size={18} />
-        </button>
-        
-        <div className="flex items-center gap-2 group w-24">
-          <Volume2 size={18} className="hover:text-white transition-colors cursor-pointer" />
-          <div className="h-1.5 flex-1 bg-white/10 rounded-full cursor-pointer relative">
-            <div className="absolute top-0 left-0 h-full bg-white rounded-full group-hover:bg-[var(--color-accent-pink)] w-full" />
+        </div>
+  
+        {/* Right: Extra Controls */}
+        <div className="flex items-center justify-end gap-4 w-1/4 min-w-[200px] text-[var(--color-text-secondary)]">
+          <button 
+            className={`transition-colors hidden md:block hover:scale-110 active:scale-95 ${showLyrics ? 'text-[var(--color-accent-pink)]' : 'hover:text-white'}`} 
+            title="Lyrics"
+            onClick={() => setShowLyrics(!showLyrics)}
+          >
+            <Mic2 size={18} />
+          </button>
+          <button 
+            className={`transition-colors hidden md:block hover:scale-110 active:scale-95 ${showQueue ? 'text-[var(--color-accent-pink)]' : 'hover:text-white'}`} 
+            title="Queue"
+            onClick={() => setShowQueue(!showQueue)}
+          >
+            <ListMusic size={18} />
+          </button>
+          <button 
+            className={`transition-colors hidden lg:block hover:scale-110 active:scale-95 ${showDevices ? 'text-[var(--color-accent-pink)]' : 'hover:text-white'}`} 
+            title="Connect to a device"
+            onClick={() => setShowDevices(!showDevices)}
+          >
+            <MonitorSpeaker size={18} />
+          </button>
+          
+          <div className="flex items-center gap-2 group w-24">
+            <button onClick={() => {
+              if (volume > 0) {
+                setPrevVolume(volume);
+                setVolume(0);
+              } else {
+                setVolume(prevVolume || 1);
+              }
+            }}>
+              <Volume2 size={18} className={`transition-colors cursor-pointer hover:scale-110 active:scale-95 ${volume > 0 ? 'hover:text-white' : 'text-[var(--color-accent-pink)]'}`} />
+            </button>
+            <div 
+              className="h-1.5 flex-1 bg-white/10 rounded-full cursor-pointer relative"
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const p = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                setVolume(p);
+              }}
+            >
+              <div 
+                className="absolute top-0 left-0 h-full bg-white rounded-full group-hover:bg-[var(--color-accent-pink)] transition-all" 
+                style={{ width: `${volume * 100}%` }}
+              />
+            </div>
           </div>
         </div>
-      </div>
       
       {/* Invisible YouTube Player for Audio Stream */}
       {currentSong?.trackId && (
@@ -178,9 +239,9 @@ export function BottomPlayer() {
             }}
             onReady={onReady}
             onStateChange={onStateChange}
-            onError={() => {
-              console.error('YouTube player error, skipping track');
-              playNext();
+            onError={(e) => {
+              console.warn('YouTube player error (likely embedding disabled), falling back to visual simulation:', e.data);
+              setUseFallback(true);
             }}
           />
         </div>

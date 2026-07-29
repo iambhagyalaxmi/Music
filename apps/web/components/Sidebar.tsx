@@ -24,7 +24,7 @@ export function Sidebar() {
     { name: 'Home', href: '/dashboard', icon: Home },
     { name: 'Discover', href: '/discover', icon: Compass },
     { name: 'Library', href: '/library', icon: Heart },
-    { name: 'Friends', href: '/friends', icon: Users, badge: 3 },
+    { name: 'Friends', href: '/friends', icon: Users },
     { name: 'Community', href: '/community', icon: MessageSquare, badge: 7 },
     { name: 'Rooms', href: '/rooms', icon: Radio },
     { name: 'Activity', href: '/activity', icon: Activity },

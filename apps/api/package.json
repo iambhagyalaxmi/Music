@@ -29,6 +29,7 @@
     "node-cron": "^4.6.0",
     "pg": "^8.22.0",
     "pusher": "^5.3.4",
+    "socket.io": "^4.8.3",
     "ytmusic-api": "^5.3.1"
   },
   "devDependencies": {

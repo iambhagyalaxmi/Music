@@ -4,6 +4,9 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+import { Server } from 'socket.io';
+import { createServer } from 'http';
+
 // Patch BigInt for JSON.stringify to prevent serialization errors
 (BigInt.prototype as any).toJSON = function () {
   return this.toString();
@@ -24,6 +27,8 @@ import { communityRoutes } from './modules/community/community.controller';
 import { communitySocialRoutes } from './modules/community/community-social.controller';
 import { friendsRoutes } from './modules/friends/friends.controller';
 import { adminRoutes } from './modules/admin/admin.routes';
+import { messagesRoutes } from './modules/messages/messages.controller';
+import { initializeMessagesSocket } from './modules/messages/messages.socket';
 import { realtimeRoutes } from './realtime';
 import { cronRoutes } from './jobs/cron.controller';
 
@@ -55,6 +60,7 @@ app.use('/api/community', communityRoutes);
 app.use('/api/community-social', communitySocialRoutes);
 app.use('/api/friends', friendsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/messages', messagesRoutes);
 app.use('/api/realtime', realtimeRoutes);
 app.use('/api/cron', cronRoutes);
 
@@ -77,9 +83,25 @@ app.get('/health', async (_req, res) => {
 // Only start the server when NOT running on Vercel (serverless)
 if (!process.env.VERCEL) {
   const PORT = process.env.PORT || 4000;
+  
+  const httpServer = createServer(app);
+  
+  const io = new Server(httpServer, {
+    cors: {
+      origin: [
+        ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(',').map(s => s.trim()) : []),
+        'http://localhost:3000',
+        'https://music-web-x3pp.vercel.app'
+      ],
+      methods: ["GET", "POST"],
+      credentials: true
+    }
+  });
 
-  app.listen(PORT, () => {
-    console.log(`✅ Server running on port ${PORT}`);
+  initializeMessagesSocket(io);
+
+  httpServer.listen(PORT, () => {
+    console.log(`o. Server running on port ${PORT}`);
     console.log(`   Health: http://localhost:${PORT}/health`);
     console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
   });

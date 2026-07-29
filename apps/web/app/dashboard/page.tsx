@@ -101,7 +101,7 @@ export default function Dashboard() {
       <HeroSection recentlyPlayed={recentlyPlayed} />
 
       {/* 2. Quick Stats */}
-      <QuickStats />
+      <QuickStats friendsOnline={friendsActivity.filter(f => f.status !== 'Offline').length} />
 
       {/* 3. Continue Listening Carousel */}
       <ContinueListening recentlyPlayed={recentlyPlayed} />
