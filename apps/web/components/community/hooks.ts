@@ -55,21 +55,7 @@ export function useCommunityQueries() {
     queryKey: ['community-posts'],
     queryFn: async () => {
       const res = await fetch(`${API_URL}/api/community-social/posts`, { headers });
-      if (!res.ok) {
-        // Mock data
-        return [
-          {
-            id: '1',
-            user: { username: 'Sarah Miller', avatarUrl: 'https://i.pravatar.cc/150?img=5', isVerified: true },
-            content: 'Just discovered this amazing indie synthwave playlist! The transitions between tracks are flawless.',
-            time: '2 hours ago',
-            genre: 'Synthwave',
-            likesCount: 124,
-            commentsCount: 12,
-            isLiked: false
-          }
-        ];
-      }
+      if (!res.ok) return [];
       return res.json();
     },
     staleTime: 60000
@@ -78,14 +64,8 @@ export function useCommunityQueries() {
   const trendingSongs = useQuery({
     queryKey: ['trending-songs'],
     queryFn: async () => {
-      // Use existing endpoint or fallback
       const res = await fetch(`${API_URL}/api/music/trending`, { headers });
-      if (!res.ok) {
-        return [
-          { id: '1', title: 'Blinding Lights', artist: 'The Weeknd', plays: '2.5M', artworkUrl: 'https://via.placeholder.com/150' },
-          { id: '2', title: 'Starboy', artist: 'The Weeknd', plays: '1.8M', artworkUrl: 'https://via.placeholder.com/150' }
-        ];
-      }
+      if (!res.ok) return [];
       return res.json();
     },
     staleTime: 60000
@@ -94,10 +74,9 @@ export function useCommunityQueries() {
   const activeRooms = useQuery({
     queryKey: ['active-rooms'],
     queryFn: async () => {
-      return [
-        { id: '1', name: 'Rock Night', listeners: 26, isPublic: true },
-        { id: '2', name: 'Pop Hits', listeners: 13, isPublic: true }
-      ];
+      const res = await fetch(`${API_URL}/api/rooms`, { headers });
+      if (!res.ok) return [];
+      return res.json();
     },
     staleTime: 60000
   });
@@ -105,11 +84,9 @@ export function useCommunityQueries() {
   const topContributors = useQuery({
     queryKey: ['top-contributors'],
     queryFn: async () => {
-      return [
-        { id: '1', name: 'Sarah', posts: 128, avatarUrl: 'https://i.pravatar.cc/150?img=5' },
-        { id: '2', name: 'Rahul', posts: 96, avatarUrl: 'https://i.pravatar.cc/150?img=11' },
-        { id: '3', name: 'Alex', posts: 80, avatarUrl: 'https://i.pravatar.cc/150?img=12' }
-      ];
+      const res = await fetch(`${API_URL}/api/community-social/contributors`, { headers });
+      if (!res.ok) return [];
+      return res.json();
     },
     staleTime: 60000
   });

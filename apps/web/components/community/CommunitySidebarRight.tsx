@@ -1,26 +1,31 @@
 import React, { useState } from 'react';
 import { Flame, Play, Trophy, Users, Calendar } from 'lucide-react';
 
-export function CommunitySidebarRight() {
+interface Song {
+  id: string;
+  title: string;
+  artist: string;
+  cover?: string;
+  artworkUrl?: string;
+}
+
+interface Contributor {
+  id?: string;
+  name: string;
+  posts: number;
+  avatar?: string;
+  avatarUrl?: string;
+}
+
+interface CommunitySidebarRightProps {
+  trendingSongs?: Song[];
+  topContributors?: Contributor[];
+}
+
+export function CommunitySidebarRight({ trendingSongs = [], topContributors = [] }: CommunitySidebarRightProps) {
   const [activeTab, setActiveTab] = useState('Songs');
   
-  const trendingSongs = [
-    { id: 1, title: 'Blinding Lights', artist: 'The Weeknd', cover: 'https://via.placeholder.com/150' },
-    { id: 2, title: 'Die With A Smile', artist: 'Lady Gaga, Bruno Mars', cover: 'https://via.placeholder.com/150' },
-    { id: 3, title: 'Kesariya', artist: 'Arijit Singh', cover: 'https://via.placeholder.com/150' },
-  ];
-
-  const popularArtists = [
-    { name: 'Taylor Swift', avatar: 'https://i.pravatar.cc/150?img=1' },
-    { name: 'The Weeknd', avatar: 'https://i.pravatar.cc/150?img=2' },
-    { name: 'Arijit Singh', avatar: 'https://i.pravatar.cc/150?img=3' }
-  ];
-
-  const topContributors = [
-    { name: 'Sarah', posts: 128, avatar: 'https://i.pravatar.cc/150?img=5' },
-    { name: 'Rahul', posts: 96, avatar: 'https://i.pravatar.cc/150?img=11' },
-    { name: 'Alex', posts: 80, avatar: 'https://i.pravatar.cc/150?img=12' }
-  ];
+  const popularArtists: { name: string; avatar: string }[] = [];
 
   return (
     <div className="flex flex-col gap-6 sticky top-[80px]">
@@ -45,13 +50,15 @@ export function CommunitySidebarRight() {
 
         {activeTab === 'Songs' && (
           <div className="flex flex-col gap-3">
-            {trendingSongs.map((song, i) => (
+            {trendingSongs.length === 0 ? (
+              <p className="text-sm text-gray-500">No trending songs right now.</p>
+            ) : trendingSongs.map((song, i) => (
               <div key={song.id} className="flex items-center gap-3 group cursor-pointer p-2 rounded-xl hover:bg-white/5 transition-colors -mx-2">
                 <p className="text-gray-500 font-bold w-4 text-center group-hover:hidden">{i + 1}</p>
                 <button className="hidden group-hover:flex items-center justify-center w-4 text-pink-500">
                   <Play size={12} fill="currentColor" />
                 </button>
-                <img src={song.cover} alt={song.title} className="w-10 h-10 rounded-lg object-cover shadow-md" />
+                <img src={song.cover || song.artworkUrl || 'https://via.placeholder.com/150'} alt={song.title} className="w-10 h-10 rounded-lg object-cover shadow-md" />
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm text-white truncate">{song.title}</p>
                   <p className="text-xs text-gray-400 truncate">{song.artist}</p>
@@ -95,10 +102,12 @@ export function CommunitySidebarRight() {
           <Trophy className="text-yellow-500" size={18} /> Top Contributors
         </h3>
         <div className="flex flex-col gap-4">
-          {topContributors.map((user, i) => (
+          {topContributors.length === 0 ? (
+            <p className="text-sm text-gray-500">No top contributors yet.</p>
+          ) : topContributors.map((user, i) => (
             <div key={i} className="flex items-center gap-3 relative">
               <div className="relative">
-                <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full object-cover border-2 border-[#111118]" />
+                <img src={user.avatar || user.avatarUrl || `https://i.pravatar.cc/150?u=${user.name}`} alt={user.name} className="w-10 h-10 rounded-full object-cover border-2 border-[#111118]" />
                 {i === 0 && <span className="absolute -bottom-1 -right-1 text-lg leading-none filter drop-shadow-md">👑</span>}
                 {i === 1 && <span className="absolute -bottom-1 -right-1 text-lg leading-none filter drop-shadow-md">🥈</span>}
                 {i === 2 && <span className="absolute -bottom-1 -right-1 text-lg leading-none filter drop-shadow-md">🥉</span>}

@@ -6,13 +6,7 @@ export function CommunitySearch() {
   const [isFocused, setIsFocused] = useState(false);
 
   // Mock autocomplete suggestions
-  const suggestions = [
-    { type: 'song', text: 'Blinding Lights', icon: <Music size={14}/> },
-    { type: 'user', text: '@sarah_miller', icon: <User size={14}/> },
-    { type: 'album', text: 'After Hours', icon: <Disc size={14}/> },
-    { type: 'playlist', text: 'Synthwave 2026', icon: <ListMusic size={14}/> },
-    { type: 'tag', text: '#IndieRock', icon: <Hash size={14}/> },
-  ];
+  const suggestions: { type: string; text: string; icon: any }[] = [];
 
   return (
     <div className="relative w-full max-w-2xl mx-auto mb-8 z-40">

@@ -1,7 +1,16 @@
 import React from 'react';
 import { Users, FileText, Music, Mic2, Plus, BarChart2 } from 'lucide-react';
 
-export function CommunityHero() {
+interface CommunityHeroProps {
+  stats?: {
+    members: number | string;
+    postsToday: number | string;
+    songsShared: number | string;
+    activeRooms: number | string;
+  };
+}
+
+export function CommunityHero({ stats = { members: '-', postsToday: '-', songsShared: '-', activeRooms: '-' } }: CommunityHeroProps) {
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/5 p-6 md:p-8 flex flex-col gap-6"
          style={{ background: 'linear-gradient(135deg, rgba(255, 77, 141, 0.15) 0%, rgba(157, 78, 221, 0.15) 100%)' }}>
@@ -38,7 +47,7 @@ export function CommunityHero() {
             <Users size={20} />
           </div>
           <div>
-            <p className="text-xl font-bold text-white">14,280</p>
+            <p className="text-xl font-bold text-white">{stats.members}</p>
             <p className="text-xs text-gray-400">Members</p>
           </div>
         </div>
@@ -47,7 +56,7 @@ export function CommunityHero() {
             <FileText size={20} />
           </div>
           <div>
-            <p className="text-xl font-bold text-white">2,400</p>
+            <p className="text-xl font-bold text-white">{stats.postsToday}</p>
             <p className="text-xs text-gray-400">Posts Today</p>
           </div>
         </div>
@@ -56,7 +65,7 @@ export function CommunityHero() {
             <Music size={20} />
           </div>
           <div>
-            <p className="text-xl font-bold text-white">540</p>
+            <p className="text-xl font-bold text-white">{stats.songsShared}</p>
             <p className="text-xs text-gray-400">Songs Shared</p>
           </div>
         </div>
@@ -65,7 +74,7 @@ export function CommunityHero() {
             <Mic2 size={20} />
           </div>
           <div>
-            <p className="text-xl font-bold text-white">86</p>
+            <p className="text-xl font-bold text-white">{stats.activeRooms}</p>
             <p className="text-xs text-gray-400">Active Rooms</p>
           </div>
         </div>

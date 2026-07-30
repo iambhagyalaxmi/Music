@@ -1,18 +1,18 @@
 import React from 'react';
 import { Hash, Radio, Users, Compass } from 'lucide-react';
 
-export function CommunitySidebarLeft() {
-  const tags = ['IndieRock', 'ArijitSingh', 'Workout', 'LoFi', 'PartyMix', 'RoadTrip'];
-  const communities = [
-    { name: 'Indie Rock Lovers', members: '12.4k' },
-    { name: 'Bollywood Fans', members: '41k' },
-    { name: 'EDM World', members: '89k' }
-  ];
-  const rooms = [
-    { name: 'Rock Night', listeners: 26 },
-    { name: 'Pop Hits', listeners: 13 },
-    { name: 'Study Focus', listeners: 45 }
-  ];
+interface Room {
+  name: string;
+  listeners: number;
+}
+
+interface CommunitySidebarLeftProps {
+  activeRooms?: Room[];
+}
+
+export function CommunitySidebarLeft({ activeRooms = [] }: CommunitySidebarLeftProps) {
+  const tags: string[] = [];
+  const communities: { name: string; members: string }[] = [];
 
   return (
     <div className="flex flex-col gap-6 sticky top-[80px]">
@@ -62,7 +62,9 @@ export function CommunitySidebarLeft() {
           <Radio className="text-purple-500" size={18} /> Active Rooms
         </h3>
         <div className="flex flex-col gap-4">
-          {rooms.map((room, i) => (
+          {activeRooms.length === 0 ? (
+            <p className="text-sm text-gray-500">No active rooms.</p>
+          ) : activeRooms.map((room, i) => (
             <div key={i} className="flex items-center justify-between group">
               <div className="flex flex-col">
                 <p className="font-bold text-sm text-white">{room.name}</p>

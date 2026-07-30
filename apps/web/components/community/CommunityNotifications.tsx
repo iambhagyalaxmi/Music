@@ -4,12 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 export function CommunityNotifications() {
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState([
-    { id: 1, type: 'like', text: 'Sarah liked your post', time: '5m ago', read: false },
-    { id: 2, type: 'comment', text: 'Alex commented on your post', time: '1h ago', read: false },
-    { id: 3, type: 'share', text: 'Rahul shared your playlist', time: '2h ago', read: true },
-    { id: 4, type: 'follow', text: 'Priya started following you', time: '3h ago', read: true },
-  ]);
+  const [notifications, setNotifications] = useState<{ id: number; type: string; text: string; time: string; read: boolean }[]>([]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 

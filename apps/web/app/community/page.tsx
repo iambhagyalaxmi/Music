@@ -18,7 +18,7 @@ import { Loader2 } from 'lucide-react';
 
 export default function CommunityPage() {
   useCommunitySocket(); // Initialize real-time updates
-  const { posts } = useCommunityQueries();
+  const { posts, trendingSongs, activeRooms, topContributors } = useCommunityQueries();
   
   const postsList = posts.data || [];
 
@@ -43,7 +43,7 @@ export default function CommunityPage() {
             
             {/* Left Sidebar */}
             <div className="hidden lg:block lg:col-span-3">
-              <CommunitySidebarLeft />
+              <CommunitySidebarLeft activeRooms={activeRooms.data || []} />
             </div>
             
             {/* Center Feed */}
@@ -61,33 +61,13 @@ export default function CommunityPage() {
                   {postsList.map((post: any) => (
                     <CommunityPostCard key={post.id} post={post} />
                   ))}
-                  
-                  {/* Mock a poll post to show the component integration */}
-                  <div className="bg-[#111118] border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-colors">
-                    <div className="flex items-center gap-3 mb-4">
-                      <img src="https://i.pravatar.cc/150?img=5" alt="Sarah" className="w-10 h-10 rounded-full object-cover" />
-                      <div>
-                        <h3 className="font-bold text-white text-sm">Sarah Miller</h3>
-                        <p className="text-xs text-gray-400">3 hours ago</p>
-                      </div>
-                    </div>
-                    <CommunityPolls 
-                      question="Which album is better?"
-                      options={[
-                        { id: '1', text: 'After Hours', votes: 450 },
-                        { id: '2', text: 'Dawn FM', votes: 230 }
-                      ]}
-                      totalVotes={680}
-                      hasVoted={false}
-                    />
-                  </div>
                 </div>
               )}
             </div>
 
             {/* Right Sidebar */}
             <div className="hidden lg:block lg:col-span-3">
-              <CommunitySidebarRight />
+              <CommunitySidebarRight trendingSongs={trendingSongs.data || []} topContributors={topContributors.data || []} />
             </div>
 
           </div>

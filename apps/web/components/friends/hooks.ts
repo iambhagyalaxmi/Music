@@ -94,14 +94,7 @@ export function useFriendsQueries() {
     queryKey: ['friends-activity'],
     queryFn: async () => {
       const res = await fetch(`${API_URL}/api/friends/activity`, { headers });
-      if (!res.ok) {
-        // Fallback to mock if endpoint doesn't exist
-        return [
-          { id: '1', user: { name: 'Rahul', avatar: 'https://i.pravatar.cc/150?u=rahul' }, type: 'listen', target: 'Blinding Lights', time: '2 mins ago' },
-          { id: '2', user: { name: 'Priya', avatar: 'https://i.pravatar.cc/150?u=priya' }, type: 'like', target: 'Kesariya', time: '15 mins ago' },
-          { id: '3', user: { name: 'Aman', avatar: 'https://i.pravatar.cc/150?u=aman' }, type: 'room', target: 'Rock Room', time: '1 hour ago' }
-        ];
-      }
+      if (!res.ok) return [];
       return res.json();
     },
     staleTime: 60000
@@ -151,9 +144,7 @@ export function useFriendsQueries() {
     queryKey: ['listening-history'],
     queryFn: async () => {
       const res = await fetch(`${API_URL}/api/listening/history`, { headers });
-      if (!res.ok) return [
-         { id: '1', users: ['You', 'Rahul'], target: 'Kesariya', duration: '45 min', time: 'Yesterday' }
-      ];
+      if (!res.ok) return [];
       return res.json();
     },
     staleTime: 60000
