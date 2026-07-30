@@ -36,7 +36,17 @@ export default function Dashboard() {
         const historyRes = await fetch(`${API_URL}/api/ytmusic/history`, { headers });
         if (historyRes.ok) {
           const historyData = await historyRes.json();
-          setRecentlyPlayed((historyData.items || []).map((item: any) => ({
+          const items = historyData.items || [];
+          const seen = new Set();
+          const uniqueItems = items.filter((item: any) => {
+            const id = item.metadata?.videoId || item.videoId || item.title || item.id;
+            if (!id) return true;
+            if (seen.has(id)) return false;
+            seen.add(id);
+            return true;
+          });
+
+          setRecentlyPlayed(uniqueItems.map((item: any) => ({
             id: item.id,
             trackId: item.metadata?.videoId || item.videoId,
             title: item.title,
@@ -107,12 +117,12 @@ export default function Dashboard() {
       <ContinueListening recentlyPlayed={recentlyPlayed} />
 
       {/* 4. Split View: Trending & Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-12">
         
         {/* Left Col (2/3 width on large screens) */}
-        <div className="lg:col-span-2 flex flex-col gap-8">
+        <div className="lg:col-span-2 flex flex-col gap-10">
           
-          <section>
+          <section className="bg-[var(--color-surface)] p-6 rounded-2xl border border-white/5 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">Trending Songs</h2>
               <button className="text-sm text-[var(--color-accent-pink)] hover:underline font-bold">View All</button>
@@ -120,7 +130,7 @@ export default function Dashboard() {
             <TrendingSongs trending={trending} />
           </section>
 
-          <section>
+          <section className="bg-[var(--color-surface)] p-6 rounded-2xl border border-white/5 shadow-sm">
             <h2 className="text-xl font-bold mb-4">Recommended For You</h2>
             <Recommendations />
           </section>
@@ -128,9 +138,9 @@ export default function Dashboard() {
         </div>
 
         {/* Right Col (1/3 width on large screens) */}
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-10">
           
-          <section>
+          <section className="bg-[var(--color-surface)] p-6 rounded-2xl border border-white/5 shadow-sm">
             <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
               Friends Activity <span className="bg-[var(--color-accent-pink)] text-white text-xs px-2 py-0.5 rounded-full">{friendsActivity.filter(f => f.status !== 'Offline').length}</span>
             </h2>
@@ -139,7 +149,7 @@ export default function Dashboard() {
 
           <WeeklySummary />
 
-          <section>
+          <section className="bg-[var(--color-surface)] p-6 rounded-2xl border border-white/5 shadow-sm">
             <h2 className="text-lg font-bold mb-4">Recently Played</h2>
             <RecentlyPlayedList recentlyPlayed={recentlyPlayed} />
           </section>

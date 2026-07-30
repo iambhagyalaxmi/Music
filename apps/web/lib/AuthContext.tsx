@@ -55,7 +55,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setToken(null);
       }
     } catch (error) {
-      console.error('Failed to fetch user:', error);
+      // Use warn instead of error to avoid Next.js terminal pollution for network issues
+      console.warn('Backend is unreachable or request failed:', error);
     } finally {
       setLoading(false);
     }
@@ -68,10 +69,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setToken(storedToken);
       fetchUser(storedToken);
     } else {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setLoading(false);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, []);
 
   const login = (newToken: string, userData: User) => {

@@ -148,7 +148,7 @@ export function TopNav() {
   };
 
   return (
-    <header className="flex flex-col sm:flex-row justify-between items-center bg-[var(--color-surface)] p-[var(--spacing-4)] lg:px-[var(--spacing-6)] rounded-[var(--radius-lg)] shadow-[0_4px_12px_rgba(0,0,0,0.1)] gap-4 sticky top-0 z-40">
+    <header className="flex flex-col sm:flex-row justify-between items-center bg-[rgba(17,19,27,0.85)] h-[72px] px-6 border-b border-[#1F2430] backdrop-blur-[16px] gap-4 sticky top-0 z-40">
       
       {/* Search Bar */}
       <div className="flex-1 flex justify-start relative w-full sm:w-auto max-w-[500px]" ref={searchRef}>
@@ -160,7 +160,7 @@ export function TopNav() {
             onChange={(e) => { setSearchQuery(e.target.value); setShowSearch(true); }}
             onFocus={() => setShowSearch(true)}
             placeholder="Search for songs, artists, or friends..." 
-            className="w-full pl-11 pr-4 py-2.5 rounded-full border border-white/10 bg-white/5 text-[var(--color-text-primary)] placeholder-[var(--color-text-muted)] focus:outline-none focus:border-[var(--color-accent-pink)] transition-colors focus:bg-white/10"
+            className="w-full pl-11 pr-4 py-2.5 rounded-full border border-[#2A3040] bg-[#181B25] text-[#F8FAFC] placeholder-[#8C93A7] focus:outline-none focus:border-[#FF4D8D] focus:shadow-[0_0_0_4px_rgba(255,77,141,0.15)] transition-all"
           />
         </div>
         
@@ -213,7 +213,7 @@ export function TopNav() {
               >
                 <Bell size={20} className={showNotifications ? "fill-current" : ""} />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-[var(--color-surface)]">
+                  <span className="absolute -top-1.5 -right-1.5 bg-[#FF4D8D] text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-[var(--color-surface)]">
                     {unreadCount}
                   </span>
                 )}
@@ -221,11 +221,11 @@ export function TopNav() {
 
               {/* Notification Dropdown */}
               {showNotifications && (
-                <div className="absolute right-0 mt-4 w-72 bg-[var(--color-surface)] border border-white/10 rounded-xl shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                  <div className="px-4 py-2 border-b border-white/5 flex justify-between items-center">
+                <div className="absolute right-0 mt-4 w-72 bg-[var(--color-surface)] border border-[#262C3A] rounded-xl shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="px-4 py-2 border-b border-[#262C3A] flex justify-between items-center">
                     <h3 className="font-bold text-white">Notifications</h3>
                     <button 
-                      className="text-xs text-[var(--color-accent-pink)] hover:underline"
+                      className="text-xs text-[#FF4D8D] hover:underline"
                       onClick={() => updateNotifications(notifications.map(n => ({ ...n, read: true })))}
                     >
                       Mark all as read
@@ -235,21 +235,21 @@ export function TopNav() {
                     {notifications.length > 0 ? notifications.map((notif) => (
                       <div 
                         key={notif.id} 
-                        className={`px-4 py-3 hover:bg-white/5 cursor-pointer transition-colors border-b border-white/5 last:border-0 ${notif.read ? 'opacity-60' : ''}`}
+                        className={`px-4 py-3 hover:bg-white/5 cursor-pointer transition-colors border-b border-[#262C3A] last:border-0 ${notif.read ? 'opacity-60' : ''}`}
                         onClick={() => {
                           updateNotifications(notifications.map(n => n.id === notif.id ? { ...n, read: true } : n));
                         }}
                       >
                         <div className="flex items-start gap-3">
-                          <div className={`w-2 h-2 mt-1.5 rounded-full shrink-0 ${!notif.read ? 'bg-[var(--color-accent-pink)]' : 'bg-transparent'}`} />
+                          <div className={`w-2 h-2 mt-1.5 rounded-full shrink-0 ${!notif.read ? 'bg-[#FF4D8D]' : 'bg-transparent'}`} />
                           <div>
                             <p className="text-sm text-white/90">{notif.title}</p>
-                            <p className="text-xs text-[var(--color-text-muted)] mt-1">{notif.time}</p>
+                            <p className="text-xs text-[#8C93A7] mt-1">{notif.time}</p>
                           </div>
                         </div>
                       </div>
                     )) : (
-                      <div className="px-4 py-6 text-center text-[var(--color-text-muted)] text-sm">
+                      <div className="px-4 py-6 text-center text-[#8C93A7] text-sm">
                         No notifications
                       </div>
                     )}
@@ -267,7 +267,7 @@ export function TopNav() {
               >
                 <MessageSquare size={20} className={showMessages ? "fill-current" : ""} />
                 {totalUnreadCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-blue-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-[var(--color-surface)]">
+                  <span className="absolute -top-1.5 -right-1.5 bg-[#FF4D8D] text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-[var(--color-surface)]">
                     {totalUnreadCount}
                   </span>
                 )}

@@ -19,8 +19,8 @@ export function ContinueListening({ recentlyPlayed }: ContinueListeningProps) {
   const tracks = recentlyPlayed.slice(0, 8);
 
   return (
-    <section>
-      <h2 className="text-lg font-bold mb-4">Continue Listening</h2>
+    <section className="bg-[var(--color-surface)] p-6 rounded-2xl border border-white/5 shadow-sm">
+      <h2 className="text-xl font-bold mb-4">Continue Listening</h2>
       <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x">
         {tracks.map((track) => (
           <div 

@@ -3,15 +3,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useMusicStore } from '@/lib/store/useMusicStore';
 import YouTube from 'react-youtube';
-import { Play, Pause, SkipBack, SkipForward, Heart, Volume2, ListMusic, MonitorSpeaker, Mic2 } from 'lucide-react';
+import { Play, Pause, SkipBack, SkipForward, Heart, Volume2, ListMusic, MonitorSpeaker, Mic2, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useSongContextMenu } from './context-menu/SongContextMenuProvider';
 
 export function BottomPlayer() {
-  const { currentSong, isPlaying, togglePlay, progress, setProgress, playNext, playPrevious, volume, setVolume } = useMusicStore();
+  const { currentSong, isPlaying, togglePlay, progress, setProgress, playNext, playPrevious, volume, setVolume, likedSongs, toggleLike } = useMusicStore();
+  const { openMenu } = useSongContextMenu();
   const ytRef = useRef<any>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const fallbackTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const [isLiked, setIsLiked] = useState(false);
+  const isLiked = currentSong ? likedSongs.includes(currentSong.trackId) : false;
   const [useFallback, setUseFallback] = useState(false);
   
   // Right side icon active states
@@ -115,9 +117,15 @@ export function BottomPlayer() {
         </div>
         <button 
           className={`transition-colors ml-2 hidden sm:block hover:scale-110 active:scale-95 ${isLiked ? 'text-[var(--color-accent-pink)]' : 'text-[var(--color-text-muted)] hover:text-white'}`}
-          onClick={() => setIsLiked(!isLiked)}
+          onClick={() => toggleLike(currentSong.trackId)}
         >
           <Heart size={20} className={isLiked ? "fill-current" : ""} />
+        </button>
+        <button 
+          className="transition-colors hidden sm:block text-[var(--color-text-muted)] hover:text-white"
+          onClick={(e) => openMenu(currentSong, e)}
+        >
+          <MoreHorizontal size={20} />
         </button>
       </div>
 

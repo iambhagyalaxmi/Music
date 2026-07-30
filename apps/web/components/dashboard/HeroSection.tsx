@@ -60,7 +60,7 @@ export function HeroSection({ recentlyPlayed }: HeroSectionProps) {
   };
 
   return (
-    <section className="relative rounded-2xl overflow-hidden p-6 sm:p-8 min-h-[220px] flex flex-col justify-end shadow-xl group">
+    <section className="relative rounded-3xl overflow-hidden p-6 sm:p-8 min-h-[320px] lg:min-h-[340px] flex flex-col justify-end shadow-xl group">
       {/* Background */}
       <div 
         className="absolute inset-0 bg-cover bg-center filter brightness-[0.35] transition-transform duration-700 group-hover:scale-105"

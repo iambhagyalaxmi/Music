@@ -1,8 +1,9 @@
 "use client";
 
 import React from 'react';
-import { Play } from 'lucide-react';
+import { Play, MoreHorizontal } from 'lucide-react';
 import { useMusicStore } from '@/lib/store/useMusicStore';
+import { useSongContextMenu } from '../context-menu/SongContextMenuProvider';
 
 interface RecentlyPlayedListProps {
   recentlyPlayed: any[];
@@ -10,6 +11,7 @@ interface RecentlyPlayedListProps {
 
 export function RecentlyPlayedList({ recentlyPlayed }: RecentlyPlayedListProps) {
   const { playSong } = useMusicStore();
+  const { openMenu } = useSongContextMenu();
 
   if (!recentlyPlayed || recentlyPlayed.length === 0) {
     return (
@@ -19,8 +21,6 @@ export function RecentlyPlayedList({ recentlyPlayed }: RecentlyPlayedListProps) 
     );
   }
 
-  // Helper to group items by mock time periods
-  // In reality, this would group based on item.createdAt
   const today = recentlyPlayed.slice(0, 3);
   const yesterday = recentlyPlayed.slice(3, 5);
   const thisWeek = recentlyPlayed.slice(5, 8);
@@ -42,6 +42,7 @@ export function RecentlyPlayedList({ recentlyPlayed }: RecentlyPlayedListProps) 
             {group.items.map((song, idx) => (
               <div 
                 key={idx}
+                onContextMenu={(e) => openMenu(song, e)}
                 className="group flex items-center justify-between p-2 hover:bg-[var(--color-surface-2)] rounded-lg transition-colors cursor-pointer"
                 onClick={() => playSong({
                   trackId: song.trackId,
@@ -63,6 +64,13 @@ export function RecentlyPlayedList({ recentlyPlayed }: RecentlyPlayedListProps) 
                     <span className="text-xs text-[var(--color-text-secondary)] truncate">{song.artist}</span>
                   </div>
                 </div>
+                
+                <button 
+                  onClick={(e) => { e.stopPropagation(); openMenu(song, e); }}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity p-2 text-[var(--color-text-secondary)] hover:text-white"
+                >
+                  <MoreHorizontal size={18} />
+                </button>
               </div>
             ))}
           </div>

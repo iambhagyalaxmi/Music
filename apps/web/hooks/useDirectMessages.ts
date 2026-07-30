@@ -80,7 +80,7 @@ export const useDirectMessages = () => {
       
       setConversations(prev => {
         const index = prev.findIndex(c => c.id === conversationId);
-        let newConvos = [...prev];
+        const newConvos = [...prev];
         
         if (index >= 0) {
           const conv = { ...newConvos[index] };

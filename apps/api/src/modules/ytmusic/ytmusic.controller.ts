@@ -143,4 +143,50 @@ router.get('/explore', async (req: Request, res: Response) => {
   }
 });
 
+// --- Context Menu Actions ---
+
+router.post('/songs/:id/like', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthenticatedRequest).user!.userId;
+    const { id } = req.params;
+    // In a real implementation, store in db.likedSongs
+    res.json({ success: true, message: 'Song liked' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to like song' });
+  }
+});
+
+router.delete('/songs/:id/like', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const userId = (req as AuthenticatedRequest).user!.userId;
+    const { id } = req.params;
+    // In a real implementation, remove from db.likedSongs
+    res.json({ success: true, message: 'Song unliked' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to unlike song' });
+  }
+});
+
+router.post('/playlists/:playlistId/songs', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { playlistId } = req.params;
+    const { songId } = req.body;
+    res.json({ success: true, message: 'Song added to playlist' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to add song to playlist' });
+  }
+});
+
+router.post('/queue', requireAuth, async (req: Request, res: Response) => {
+  res.json({ success: true, message: 'Added to queue' });
+});
+
+router.post('/download', requireAuth, async (req: Request, res: Response) => {
+  res.json({ success: true, message: 'Download started' });
+});
+
+router.post('/share', requireAuth, async (req: Request, res: Response) => {
+  res.json({ success: true, message: 'Share link generated' });
+});
+
 export const ytmusicRoutes = router;

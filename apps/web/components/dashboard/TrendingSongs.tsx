@@ -29,7 +29,7 @@ export function TrendingSongs({ trending }: TrendingSongsProps) {
       {songs.map((song: any, idx: number) => (
         <div 
           key={song.trackId || idx}
-          className="group flex items-center justify-between p-3 bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)] rounded-xl border border-transparent hover:border-white/5 transition-all shadow-sm hover:shadow-md cursor-pointer"
+          className="group flex items-center justify-between p-4 bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)] rounded-2xl border border-transparent hover:border-white/5 transition-all shadow-sm hover:shadow-md cursor-pointer"
           onClick={() => playSong({
             trackId: song.trackId,
             title: song.songTitle || song.title,
@@ -39,11 +39,11 @@ export function TrendingSongs({ trending }: TrendingSongsProps) {
           })}
         >
           {/* Left: Rank, Art, Info */}
-          <div className="flex items-center gap-4 flex-1 min-w-0">
-            <span className="text-[var(--color-text-muted)] font-bold text-sm w-4 text-right hidden sm:block">
+          <div className="flex items-center gap-5 flex-1 min-w-0">
+            <span className="text-[var(--color-text-muted)] font-bold text-lg w-6 text-right hidden sm:block">
               {idx + 1}
             </span>
-            <div className="relative w-12 h-12 shrink-0">
+            <div className="relative w-20 h-20 shrink-0">
               <img 
                 src={song.cover} 
                 alt={song.songTitle} 
@@ -54,10 +54,10 @@ export function TrendingSongs({ trending }: TrendingSongsProps) {
               </div>
             </div>
             <div className="flex flex-col min-w-0 pr-4">
-              <span className="font-bold text-sm truncate group-hover:text-[var(--color-accent-pink)] transition-colors">
+              <span className="font-bold text-lg truncate group-hover:text-[var(--color-accent-pink)] transition-colors">
                 {song.songTitle || song.title}
               </span>
-              <span className="text-xs text-[var(--color-text-secondary)] truncate">
+              <span className="text-sm text-[var(--color-text-secondary)] truncate">
                 {song.artist}
               </span>
             </div>

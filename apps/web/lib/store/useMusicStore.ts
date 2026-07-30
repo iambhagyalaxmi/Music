@@ -9,6 +9,16 @@ export interface Song {
   duration?: number;
 }
 
+export interface Playlist {
+  id: string;
+  title: string;
+  description?: string;
+  creator: string;
+  songCount: number;
+  lastUpdated: string;
+  images: string[];
+}
+
 interface MusicState {
   currentSong: Song | null;
   isPlaying: boolean;
@@ -25,8 +35,20 @@ interface MusicState {
   setVolume: (volume: number) => void;
   setProgress: (progress: number) => void;
   addToQueue: (song: Song) => void;
+  insertNext: (song: Song) => void;
   playNext: () => void;
   playPrevious: () => void;
+  
+  likedSongs: string[];
+  toggleLike: (trackId: string) => void;
+
+  userPlaylists: Playlist[];
+  createPlaylist: (playlist: Playlist) => void;
+  addSongToPlaylist: (playlistId: string, song: Song) => void;
+  removeSongFromPlaylist: (playlistId: string, trackId: string) => void;
+
+  savedAlbums: any[];
+  toggleSaveAlbum: (album: any) => void;
 }
 
 export const useMusicStore = create<MusicState>((set, get) => ({
@@ -47,6 +69,7 @@ export const useMusicStore = create<MusicState>((set, get) => ({
   setVolume: (volume) => set({ volume }),
   setProgress: (progress) => set({ progress }),
   addToQueue: (song) => set((state) => ({ queue: [...state.queue, song] })),
+  insertNext: (song) => set((state) => ({ queue: [song, ...state.queue] })),
   playNext: () => set((state) => {
     if (!state.currentSong) return state;
     const newHistory = [...state.history, state.currentSong];
@@ -80,5 +103,52 @@ export const useMusicStore = create<MusicState>((set, get) => ({
     const newQueue = state.currentSong ? [state.currentSong, ...state.queue] : state.queue;
     
     return { currentSong: previousSong, history: newHistory, queue: newQueue, isPlaying: true, progress: 0 };
+  }),
+  likedSongs: [],
+  toggleLike: (trackId) => set((state) => {
+    if (state.likedSongs.includes(trackId)) {
+      return { likedSongs: state.likedSongs.filter(id => id !== trackId) };
+    } else {
+      return { likedSongs: [...state.likedSongs, trackId] };
+    }
+  }),
+  userPlaylists: [
+    { id: '1', title: 'Chill Mix', creator: 'You', songCount: 12, lastUpdated: '2 days ago', images: ['https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=150&q=80'] },
+    { id: '2', title: 'Workout', creator: 'You', songCount: 24, lastUpdated: '1 day ago', images: ['https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=150&q=80'] },
+    { id: '3', title: 'Party', creator: 'You', songCount: 45, lastUpdated: '1 week ago', images: ['https://images.unsplash.com/photo-1493225457124-a1a2a5956093?w=150&q=80'] },
+    { id: '4', title: 'Study', creator: 'You', songCount: 8, lastUpdated: '3 hours ago', images: ['https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=150&q=80'] },
+  ],
+  createPlaylist: (playlist) => set((state) => ({ userPlaylists: [playlist, ...state.userPlaylists] })),
+  addSongToPlaylist: (playlistId, song) => set((state) => ({
+    userPlaylists: state.userPlaylists.map(pl => {
+      if (pl.id === playlistId) {
+        return {
+          ...pl,
+          songCount: pl.songCount + 1,
+          images: pl.images.includes(song.cover || '') ? pl.images : [song.cover || '', ...pl.images].filter(Boolean).slice(0, 4)
+        };
+      }
+      return pl;
+    })
+  })),
+  removeSongFromPlaylist: (playlistId, trackId) => set((state) => ({
+    userPlaylists: state.userPlaylists.map(pl => {
+      if (pl.id === playlistId) {
+        return {
+          ...pl,
+          songCount: Math.max(0, pl.songCount - 1)
+        };
+      }
+      return pl;
+    })
+  })),
+  savedAlbums: [],
+  toggleSaveAlbum: (album) => set((state) => {
+    const exists = state.savedAlbums.some(a => a.id === album.id);
+    if (exists) {
+      return { savedAlbums: state.savedAlbums.filter(a => a.id !== album.id) };
+    } else {
+      return { savedAlbums: [album, ...state.savedAlbums] };
+    }
   })
 }));

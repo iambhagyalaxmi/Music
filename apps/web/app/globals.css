@@ -2,26 +2,26 @@
 :root {
   /* Core Colors */
   --color-bg: #09090B;
-  --color-surface: #11111A;
-  --color-surface-2: #1A1A27;
-  --color-border: #2A2A3C;
-  --color-text-primary: #F5F5FA;
-  --color-text-secondary: #A0A0B8;
-  --color-text-muted: #6B6B85;
+  --color-surface: #11131B;
+  --color-surface-2: #161A23;
+  --color-border: #262C3A;
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #B5BAC8;
+  --color-text-muted: #8C93A7;
   
   /* Brand Colors */
-  --color-primary: #1DB954;
-  --color-primary-hover: #1ED760;
+  --color-primary: #FF4D8D;
+  --color-primary-hover: #FF7A59;
 
   /* Brand / Accent Colors */
   --color-accent-pink: #FF4D8D;
   --color-accent-purple: #8B5CF6;
-  --color-accent-blue: #4D9FFF;
-  --gradient-brand: linear-gradient(90deg, var(--color-accent-pink) 0%, var(--color-accent-purple) 50%, var(--color-accent-blue) 100%);
+  --color-accent-blue: #F97316;
+  --gradient-brand: linear-gradient(135deg, var(--color-accent-pink) 0%, var(--color-primary-hover) 100%);
 
   /* Semantic Colors */
-  --color-success: #3DD68C;
-  --color-warning: #F5B93D;
+  --color-success: #22C55E;
+  --color-warning: #F97316;
   --color-error: #FF5C5C;
   --color-live: #FF4D8D;
 
@@ -56,73 +56,35 @@
   --color-text-muted: #8F8FA3;
 }
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 
-body {
-  background-color: var(--color-bg);
-  color: var(--color-text-primary);
-  font-family: var(--font-body);
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-}
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+    font-family: var(--font-body);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
 
-/* Custom Scrollbar for sleek aesthetic */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    line-height: 1.2;
+  }
 
-::-webkit-scrollbar-track {
-  background: transparent;
-}
+  a {
+    color: var(--color-accent-blue);
+    text-decoration: none;
+  }
 
-::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  transition: background 0.2s ease;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-/* Base custom input styles for settings */
-.settings-input {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background-color: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  color: var(--color-text-primary);
-  font-family: var(--font-body);
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
-}
-
-.settings-input:focus {
-  outline: none;
-  border-color: var(--color-primary);
-  background-color: rgba(255, 255, 255, 0.05);
-  box-shadow: 0 0 0 3px rgba(29, 185, 84, 0.15);
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display);
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-a {
-  color: var(--color-accent-blue);
-  text-decoration: none;
-}
-
-a:hover {
-  text-decoration: underline;
+  a:hover {
+    text-decoration: underline;
+  }
 }
 
 /* Base button styles */
@@ -145,14 +107,22 @@ a:hover {
 }
 
 .btn-primary {
-  background: var(--gradient-brand);
+  background: linear-gradient(135deg, #FF4D8D, #FF7A59);
   color: #FFF;
 }
 
+.btn-primary:hover {
+  box-shadow: 0 0 25px rgba(255,77,141,.35);
+}
+
 .btn-secondary {
-  background-color: var(--color-surface-2);
-  color: var(--color-text-primary);
-  border: 1px solid var(--color-border);
+  background-color: #1C2230;
+  color: #FFF;
+  border: 1px solid #2D3748;
+}
+
+.btn-secondary:hover {
+  background-color: #262E3F;
 }
 
 /* Custom Range Slider */
