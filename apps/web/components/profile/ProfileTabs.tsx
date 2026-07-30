@@ -1,58 +1,50 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
-import { Activity, ListMusic, Users, Radio, Settings, Trophy } from 'lucide-react';
-import { AchievementsList } from './AchievementsList';
-import { ProfileSettings } from './ProfileSettings';
-import { ActivityFeed } from './ActivityFeed';
-import { ProfileRooms } from './ProfileRooms';
-import { ProfilePlaylists } from './ProfilePlaylists';
-import { ProfileFriends } from './ProfileFriends';
+import { motion } from 'framer-motion';
+import { LayoutDashboard, History, ListMusic, Heart, Disc, Mic2, Activity, Users, Trophy, Info } from 'lucide-react';
 
 interface ProfileTabsProps {
-  isOwnProfile: boolean;
-  profileId: string;
   activeTab: string;
-  setActiveTab: (tab: string) => void;
+  onTabChange: (tab: string) => void;
 }
 
 const TABS = [
-  { id: 'activity', label: 'Activity', icon: Activity },
-  { id: 'playlists', label: 'Playlists', icon: ListMusic },
-  { id: 'friends', label: 'Friends', icon: Users },
-  { id: 'rooms', label: 'Rooms', icon: Radio },
-  { id: 'achievements', label: 'Achievements', icon: Trophy },
+  { id: 'Overview', icon: LayoutDashboard },
+  { id: 'Recently Played', icon: History },
+  { id: 'Playlists', icon: ListMusic },
+  { id: 'Liked Songs', icon: Heart },
+  { id: 'Albums', icon: Disc },
+  { id: 'Artists', icon: Mic2 },
+  { id: 'Activity', icon: Activity },
+  { id: 'Friends', icon: Users },
+  { id: 'Achievements', icon: Trophy },
+  { id: 'About', icon: Info },
 ];
 
-export function ProfileTabs({ isOwnProfile, profileId, activeTab, setActiveTab }: ProfileTabsProps) {
-
-  const tabsToRender = isOwnProfile 
-    ? [...TABS, { id: 'settings', label: 'Settings', icon: Settings }] 
-    : TABS;
-
+export function ProfileTabs({ activeTab, onTabChange }: ProfileTabsProps) {
   return (
-    <div style={{ marginTop: 'var(--spacing-12)', width: '100%' }}>
-      {/* Tab Navigation */}
-      <div style={{ display: 'flex', width: '100%', alignItems: 'center', gap: 'var(--spacing-2)', overflowX: 'auto', borderBottom: '1px solid var(--color-border)', paddingBottom: '1px' }}>
-        {tabsToRender.map((tab) => {
+    <div className="sticky top-[70px] z-30 bg-[#09090B]/90 backdrop-blur-xl border-b border-white/5 py-2 mt-4">
+      <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-1">
+        {TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
           
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap', padding: '12px 16px', fontSize: 'var(--text-sm)', fontWeight: '600', color: isActive ? 'var(--color-primary)' : 'var(--color-text-secondary)', background: 'none', border: 'none', cursor: 'pointer', transition: 'color 0.2s' }}
-              onMouseEnter={e => !isActive && (e.currentTarget.style.color = '#fff')}
-              onMouseLeave={e => !isActive && (e.currentTarget.style.color = 'var(--color-text-secondary)')}
+              onClick={() => onTabChange(tab.id)}
+              className={`relative flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-colors ${
+                isActive 
+                  ? 'text-white' 
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
             >
-              <Icon size={16} style={{ color: isActive ? 'var(--color-primary)' : 'currentColor', transition: 'transform 0.2s' }} />
-              {tab.label}
+              <Icon size={16} className={isActive ? 'text-pink-500' : 'text-gray-500'} />
+              {tab.id}
               
               {isActive && (
                 <motion.div
                   layoutId="profile-tab-indicator"
-                  style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '2px', backgroundColor: 'var(--color-primary)' }}
+                  className="absolute inset-0 border border-white/10 bg-white/5 rounded-full -z-10"
                   initial={false}
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 />
@@ -60,43 +52,6 @@ export function ProfileTabs({ isOwnProfile, profileId, activeTab, setActiveTab }
             </button>
           );
         })}
-      </div>
-
-      {/* Tab Content */}
-      <div style={{ marginTop: 'var(--spacing-8)', minHeight: '400px' }}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-          >
-            {activeTab === 'activity' && (
-              <ActivityFeed />
-            )}
-            
-            {activeTab === 'playlists' && (
-              <ProfilePlaylists />
-            )}
-            
-            {activeTab === 'friends' && (
-              <ProfileFriends />
-            )}
-            
-            {activeTab === 'rooms' && (
-              <ProfileRooms />
-            )}
-            
-            {activeTab === 'achievements' && (
-              <AchievementsList />
-            )}
-            
-            {activeTab === 'settings' && isOwnProfile && (
-              <ProfileSettings />
-            )}
-          </motion.div>
-        </AnimatePresence>
       </div>
     </div>
   );

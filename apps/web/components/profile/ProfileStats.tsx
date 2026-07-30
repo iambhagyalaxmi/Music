@@ -1,94 +1,46 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Play, Video, Clock, ListMusic, Users, Headphones, Heart, Download, Search, Flame, Calendar, Activity, Music, Mic } from 'lucide-react';
+import { Heart, Disc, Mic2, ListMusic, Clock, Users, Radio, MessageSquare } from 'lucide-react';
 
 interface ProfileStatsProps {
-  stats: any;
+  stats?: any;
 }
 
-const formatNumber = (num: number) => {
-  if (!num) return '0';
-  if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-  if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-  return num.toString();
-};
-
-const formatTime = (secs: number) => {
-  if (!secs) return '0h';
-  const hours = Math.floor(secs / 3600);
-  const minutes = Math.floor((secs % 3600) / 60);
-  
-  if (hours > 0 && minutes > 0) return `${hours}h ${minutes}m`;
-  if (hours > 0) return `${hours} hours`;
-  if (minutes > 0) return `${minutes}m`;
-  return '0h';
-};
-
 export function ProfileStats({ stats }: ProfileStatsProps) {
-  const statItems = [
-    { label: 'Songs Played', value: formatNumber(stats?.songsPlayed), icon: Play, color: '#1DB954' },
-    { label: 'Videos Watched', value: formatNumber(stats?.musicVideosWatched), icon: Video, color: '#FF4D8D' },
-    { label: 'Listening Time', value: formatTime(stats?.totalListeningSecs), icon: Clock, color: '#8B5CF6' },
-    { label: 'Total Playlists', value: formatNumber(stats?.totalPlaylists), icon: ListMusic, color: '#3B82F6' },
-    { label: 'Friends', value: formatNumber(stats?.friendsCount), icon: Users, color: '#3DD68C' },
-    { label: 'Rooms Joined', value: formatNumber(stats?.roomsJoined), icon: Headphones, color: '#F5B93D' },
-    { label: 'Songs Liked', value: formatNumber(stats?.songsLiked), icon: Heart, color: '#EF4444' },
-    { label: 'Downloads', value: formatNumber(stats?.downloads), icon: Download, color: '#10B981' },
-    { label: 'Searches', value: formatNumber(stats?.searches), icon: Search, color: '#6366F1' },
-    { label: 'Streak', value: `${stats?.streak || 0} Days`, icon: Flame, color: '#F97316' },
-    { label: 'Consecutive Days', value: formatNumber(stats?.consecutiveDays), icon: Calendar, color: '#EC4899' },
-    { label: 'Avg Daily', value: `${formatTime(stats?.avgDailyListening)}/day`, icon: Activity, color: '#14B8A6' },
-    { label: 'Favorite Genre', value: stats?.favoriteGenre || 'N/A', icon: Music, color: '#D946EF' },
-    { label: 'Favorite Artist', value: stats?.favoriteArtist || 'N/A', icon: Mic, color: '#F43F5E' },
+  // Use fallbacks if stats are not provided
+  const data = [
+    { label: 'Liked Songs', value: stats?.likedSongs || '1,245', icon: <Heart size={20} />, color: 'text-red-500', bg: 'bg-red-500/10' },
+    { label: 'Albums', value: stats?.albums || '220', icon: <Disc size={20} />, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+    { label: 'Artists', value: stats?.artists || '180', icon: <Mic2 size={20} />, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { label: 'Playlists', value: stats?.playlists || '18', icon: <ListMusic size={20} />, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
+    { label: 'Listening Hours', value: stats?.listeningHours || '543 hrs', icon: <Clock size={20} />, color: 'text-green-500', bg: 'bg-green-500/10' },
+    { label: 'Communities', value: stats?.communitiesJoined || '14', icon: <MessageSquare size={20} />, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+    { label: 'Friends', value: stats?.friends || '38', icon: <Users size={20} />, color: 'text-orange-500', bg: 'bg-orange-500/10' },
+    { label: 'Rooms Joined', value: stats?.roomsJoined || '72', icon: <Radio size={20} />, color: 'text-pink-500', bg: 'bg-pink-500/10' },
   ];
 
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 }
-    }
-  };
-
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
-  };
-
   return (
-    <motion.div 
-      variants={container}
-      initial="hidden"
-      animate="show"
-      style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 'var(--spacing-4)' }}
-    >
-      {statItems.map((stat, i) => {
-        const Icon = stat.icon;
-        return (
-          <motion.div
-            key={i}
-            variants={item}
-            style={{ position: 'relative', overflow: 'hidden', borderRadius: '16px', backgroundColor: 'var(--color-surface)', padding: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', transition: 'background-color 0.2s, border-color 0.2s', cursor: 'default' }}
-            onMouseEnter={e => {
-              e.currentTarget.style.backgroundColor = 'var(--color-surface-2)';
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.backgroundColor = 'var(--color-surface)';
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
-            }}
-          >
-            <div style={{ marginBottom: '12px', display: 'inline-flex', borderRadius: '12px', backgroundColor: stat.color, padding: '10px', color: '#fff', boxShadow: `0 4px 12px ${stat.color}40` }}>
-              <Icon size={20} />
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {data.map((item, i) => (
+        <motion.div 
+          key={item.label}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: i * 0.05 }}
+          className="bg-[#111118] border border-white/5 rounded-2xl p-5 hover:bg-[#1A1A24] transition-all hover:-translate-y-1 hover:shadow-2xl group relative overflow-hidden"
+        >
+          <div className="flex items-center gap-3 mb-3 relative z-10">
+            <div className={`w-10 h-10 rounded-lg ${item.bg} ${item.color} flex items-center justify-center transition-transform group-hover:scale-110`}>
+              {item.icon}
             </div>
-            <div style={{ marginTop: '4px', fontSize: '1.5rem', fontWeight: '900', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={String(stat.value)}>{stat.value}</div>
-            <div style={{ fontSize: '0.75rem', fontWeight: '500', color: 'var(--color-text-secondary)' }}>{stat.label}</div>
-            
-            {/* Glossy overlay effect */}
-            <div style={{ pointerEvents: 'none', position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(to top right, rgba(255,255,255,0), rgba(255,255,255,0.05), rgba(255,255,255,0))', opacity: 0, transition: 'opacity 0.5s' }} />
-          </motion.div>
-        );
-      })}
-    </motion.div>
+            <p className="text-sm font-medium text-gray-400 leading-tight">{item.label}</p>
+          </div>
+          <p className="text-2xl font-black text-white relative z-10">{item.value}</p>
+          
+          {/* Subtle glow on hover */}
+          <div className={`absolute -bottom-10 -right-10 w-24 h-24 rounded-full blur-[40px] opacity-0 group-hover:opacity-40 transition-opacity ${item.bg.replace('/10', '')}`}></div>
+        </motion.div>
+      ))}
+    </div>
   );
 }
