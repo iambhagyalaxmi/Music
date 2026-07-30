@@ -4,12 +4,12 @@ import { CompactMusicCard } from '@/components/discover/CompactMusicCard';
 
 export function FavoriteArtists() {
   const artists = [
-    { id: '1', title: 'Taylor Swift', type: 'Artist', image: 'https://i.pravatar.cc/150?img=1' },
-    { id: '2', title: 'Arijit Singh', type: 'Artist', image: 'https://i.pravatar.cc/150?img=2' },
-    { id: '3', title: 'The Weeknd', type: 'Artist', image: 'https://i.pravatar.cc/150?img=3' },
-    { id: '4', title: 'Imagine Dragons', type: 'Artist', image: 'https://i.pravatar.cc/150?img=4' },
-    { id: '5', title: 'Dua Lipa', type: 'Artist', image: 'https://i.pravatar.cc/150?img=5' },
-    { id: '6', title: 'Ed Sheeran', type: 'Artist', image: 'https://i.pravatar.cc/150?img=6' },
+    { trackId: '1', title: 'Taylor Swift', artist: 'Artist', cover: 'https://i.pravatar.cc/150?img=1' },
+    { trackId: '2', title: 'Arijit Singh', artist: 'Artist', cover: 'https://i.pravatar.cc/150?img=2' },
+    { trackId: '3', title: 'The Weeknd', artist: 'Artist', cover: 'https://i.pravatar.cc/150?img=3' },
+    { trackId: '4', title: 'Imagine Dragons', artist: 'Artist', cover: 'https://i.pravatar.cc/150?img=4' },
+    { trackId: '5', title: 'Dua Lipa', artist: 'Artist', cover: 'https://i.pravatar.cc/150?img=5' },
+    { trackId: '6', title: 'Ed Sheeran', artist: 'Artist', cover: 'https://i.pravatar.cc/150?img=6' },
   ];
 
   return (
@@ -31,13 +31,10 @@ export function FavoriteArtists() {
 
       <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-4 snap-x">
         {artists.map(artist => (
-          <div key={artist.id} className="min-w-[160px] snap-start">
+          <div key={artist.trackId} className="min-w-[160px] snap-start [&_img]:rounded-full">
             <CompactMusicCard 
-              id={artist.id}
-              title={artist.title}
-              subtitle={artist.type}
-              image={artist.image}
-              rounded="full"
+              song={artist}
+              onPlay={() => console.log('play', artist.trackId)}
             />
           </div>
         ))}

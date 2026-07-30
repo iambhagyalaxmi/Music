@@ -4,11 +4,11 @@ import { CompactMusicCard } from '@/components/discover/CompactMusicCard';
 
 export function FavoriteAlbums() {
   const albums = [
-    { id: '1', title: 'After Hours', subtitle: 'The Weeknd • 2020', image: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&q=80' },
-    { id: '2', title: 'Future Nostalgia', subtitle: 'Dua Lipa • 2020', image: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&q=80' },
-    { id: '3', title: 'Fine Line', subtitle: 'Harry Styles • 2019', image: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&q=80' },
-    { id: '4', title: '1989', subtitle: 'Taylor Swift • 2014', image: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&q=80' },
-    { id: '5', title: 'Divide', subtitle: 'Ed Sheeran • 2017', image: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&q=80' },
+    { trackId: '1', title: 'After Hours', artist: 'The Weeknd', album: '2020', cover: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&q=80' },
+    { trackId: '2', title: 'Future Nostalgia', artist: 'Dua Lipa', album: '2020', cover: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&q=80' },
+    { trackId: '3', title: 'Fine Line', artist: 'Harry Styles', album: '2019', cover: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&q=80' },
+    { trackId: '4', title: '1989', artist: 'Taylor Swift', album: '2014', cover: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&q=80' },
+    { trackId: '5', title: 'Divide', artist: 'Ed Sheeran', album: '2017', cover: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=500&q=80' },
   ];
 
   return (
@@ -30,13 +30,10 @@ export function FavoriteAlbums() {
 
       <div className="flex gap-4 overflow-x-auto hide-scrollbar pb-4 snap-x">
         {albums.map(album => (
-          <div key={album.id} className="min-w-[160px] snap-start">
+          <div key={album.trackId} className="min-w-[160px] snap-start">
             <CompactMusicCard 
-              id={album.id}
-              title={album.title}
-              subtitle={album.subtitle}
-              image={album.image}
-              rounded="xl"
+              song={album}
+              onPlay={() => console.log('play', album.trackId)}
             />
           </div>
         ))}
