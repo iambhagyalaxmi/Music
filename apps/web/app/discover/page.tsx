@@ -66,13 +66,12 @@ export default function DiscoverPage() {
     duration: '3:30'
   }));
 
-  // Mocking Popular Artists since it might not be directly in explore API
   const popularArtists = [
-    { id: '1', name: 'Taylor Swift', image: 'https://ui-avatars.com/api/?name=Taylor+Swift&background=random', monthlyListeners: '109M listeners' },
-    { id: '2', name: 'The Weeknd', image: 'https://ui-avatars.com/api/?name=The+Weeknd&background=random', monthlyListeners: '115M listeners' },
-    { id: '3', name: 'Arijit Singh', image: 'https://ui-avatars.com/api/?name=Arijit+Singh&background=random', monthlyListeners: '45M listeners' },
-    { id: '4', name: 'Bad Bunny', image: 'https://ui-avatars.com/api/?name=Bad+Bunny&background=random', monthlyListeners: '78M listeners' },
-    { id: '5', name: 'Drake', image: 'https://ui-avatars.com/api/?name=Drake&background=random', monthlyListeners: '85M listeners' },
+    { id: '1', name: 'Taylor Swift', image: 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Taylor_Swift_at_the_2023_MTV_Video_Music_Awards_%283%29.png', monthlyListeners: '109M listeners' },
+    { id: '2', name: 'The Weeknd', image: 'https://upload.wikimedia.org/wikipedia/commons/9/95/The_Weeknd_Cannes_2023.png', monthlyListeners: '115M listeners' },
+    { id: '3', name: 'Arijit Singh', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Arijit_Singh_2019.jpg/800px-Arijit_Singh_2019.jpg', monthlyListeners: '45M listeners' },
+    { id: '4', name: 'Bad Bunny', image: 'https://upload.wikimedia.org/wikipedia/commons/e/eb/Bad_Bunny_at_the_2019_Billboard_Music_Awards.png', monthlyListeners: '78M listeners' },
+    { id: '5', name: 'Drake', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Drake_July_2016.jpg/800px-Drake_July_2016.jpg', monthlyListeners: '85M listeners' },
   ];
 
   // Using new releases or fallback albums
