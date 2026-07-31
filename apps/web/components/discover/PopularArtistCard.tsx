@@ -11,6 +11,9 @@ export interface PopularArtistCardProps {
 }
 
 export function PopularArtistCard({ artist }: PopularArtistCardProps) {
+  const [imgSrc, setImgSrc] = React.useState(artist.image);
+  const fallbackImage = 'https://images.unsplash.com/photo-1493225457224-dda09a50a40d?w=150&q=80'; // generic music artist placeholder
+
   return (
     <motion.div 
       whileHover={{ scale: 1.05 }}
@@ -18,8 +21,13 @@ export function PopularArtistCard({ artist }: PopularArtistCardProps) {
     >
       <div className="w-[120px] h-[120px] md:w-[150px] md:h-[150px] rounded-full overflow-hidden shadow-lg border-4 border-transparent group-hover:border-[var(--color-accent-pink)]/30 transition-colors">
         <img 
-          src={artist.image} 
+          src={imgSrc} 
           alt={artist.name} 
+          onError={(e) => {
+            if (imgSrc !== fallbackImage) {
+              setImgSrc(fallbackImage);
+            }
+          }}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           loading="lazy"
         />

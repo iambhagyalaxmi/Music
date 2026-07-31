@@ -67,11 +67,11 @@ export default function DiscoverPage() {
   }));
 
   const popularArtists = [
-    { id: '1', name: 'Taylor Swift', image: 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Taylor_Swift_at_the_2023_MTV_Video_Music_Awards_%283%29.png', monthlyListeners: '109M listeners' },
-    { id: '2', name: 'The Weeknd', image: 'https://upload.wikimedia.org/wikipedia/commons/9/95/The_Weeknd_Cannes_2023.png', monthlyListeners: '115M listeners' },
-    { id: '3', name: 'Arijit Singh', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Arijit_Singh_2019.jpg/800px-Arijit_Singh_2019.jpg', monthlyListeners: '45M listeners' },
-    { id: '4', name: 'Bad Bunny', image: 'https://upload.wikimedia.org/wikipedia/commons/e/eb/Bad_Bunny_at_the_2019_Billboard_Music_Awards.png', monthlyListeners: '78M listeners' },
-    { id: '5', name: 'Drake', image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Drake_July_2016.jpg/800px-Drake_July_2016.jpg', monthlyListeners: '85M listeners' },
+    { id: '1', name: 'Taylor Swift', image: 'https://i.scdn.co/image/ab6761610000e5eb5a00969a4898687a716c528f', monthlyListeners: '109M listeners' },
+    { id: '2', name: 'The Weeknd', image: 'https://i.scdn.co/image/ab6761610000e5eb214f3cf1cbc91129b0f4ce00', monthlyListeners: '115M listeners' },
+    { id: '3', name: 'Arijit Singh', image: 'https://i.scdn.co/image/ab6761610000e5eb0261696c5df3be99da6ed3f3', monthlyListeners: '45M listeners' },
+    { id: '4', name: 'Bad Bunny', image: 'https://i.scdn.co/image/ab6761610000e5eb9e3ceaeb6cb242d8d1e44f84', monthlyListeners: '78M listeners' },
+    { id: '5', name: 'Drake', image: 'https://i.scdn.co/image/ab6761610000e5eb4293385d324db8558179afd9', monthlyListeners: '85M listeners' },
   ];
 
   // Using new releases or fallback albums
