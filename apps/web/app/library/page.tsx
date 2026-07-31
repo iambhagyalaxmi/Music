@@ -86,13 +86,22 @@ export default function LibraryPage() {
     });
   };
 
+  const stats = {
+    songs: uniqueHistory.length,
+    playlists: playlists.length,
+    albums: new Set(uniqueHistory.map((s: any) => s.album).filter(Boolean)).size,
+    artists: new Set(uniqueHistory.map((s: any) => s.artist).filter(Boolean)).size,
+    hours: Math.round(uniqueHistory.reduce((acc, curr: any) => acc + (curr.duration ? parseInt(curr.duration.split(':')[0]) || 0 : 3), 0) / 60) || 0,
+    downloads: downloads.length
+  };
+
   return (
     <DashboardLayout>
       <div className="flex flex-col gap-[48px] w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-[32px] pb-24">
         
         {/* 1. Hero & Stats */}
-        <LibraryHero user={user} stats={{ songs: 128, playlists: 24, albums: 18, artists: 42, hours: 45 }} />
-        <QuickStats stats={{ songs: 128, playlists: 24, albums: 18, downloads: 63 }} />
+        <LibraryHero user={user} stats={stats} history={uniqueHistory} />
+        <QuickStats stats={stats} />
         
         {/* 2. Actions & Filters */}
         <LibraryQuickActions />

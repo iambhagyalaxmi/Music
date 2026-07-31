@@ -11,9 +11,10 @@ interface LibraryHeroProps {
     artists: number;
     hours: number;
   };
+  history?: any[];
 }
 
-export function LibraryHero({ user, stats }: LibraryHeroProps) {
+export function LibraryHero({ user, stats, history = [] }: LibraryHeroProps) {
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good Morning';
@@ -84,17 +85,28 @@ export function LibraryHero({ user, stats }: LibraryHeroProps) {
       <div className="relative hidden md:block w-[40%] h-full overflow-hidden">
         {/* We'll use a CSS grid of album covers to create a nice collage */}
         <div className="absolute inset-0 grid grid-cols-3 gap-2 p-6 rotate-12 scale-125 opacity-40">
-          {[...Array(12)].map((_, i) => (
-            <motion.img 
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              src={`https://images.unsplash.com/photo-${1614613535308 + i}-eb5fbd3d2c17?w=150&q=80`}
-              className="w-full h-full object-cover rounded-xl shadow-lg"
-              alt="Collage"
-            />
-          ))}
+          {[...Array(12)].map((_, i) => {
+            const historyItem = history[i % history.length];
+            const imgSrc = historyItem?.cover || historyItem?.thumbnail || '/artist-placeholder.svg';
+            
+            return (
+              <motion.img 
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                src={imgSrc}
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (target.src !== window.location.origin + '/artist-placeholder.svg') {
+                    target.src = '/artist-placeholder.svg';
+                  }
+                }}
+                className="w-full h-full object-cover rounded-xl shadow-lg"
+                alt="Collage"
+              />
+            );
+          })}
         </div>
         {/* Gradient fade to blend into the left side */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#19152B]/50 to-[#09090B]/80" />
