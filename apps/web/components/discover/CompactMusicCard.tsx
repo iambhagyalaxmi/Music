@@ -27,8 +27,14 @@ export function CompactMusicCard({ song, onPlay }: CompactMusicCardProps) {
       {/* Cover Image */}
       <div className="relative w-full aspect-square rounded-[12px] overflow-hidden shadow-md mb-3">
         <img 
-          src={song.cover || 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&q=80'} 
+          src={song.cover || '/artist-placeholder.svg'} 
           alt={song.title} 
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            if (target.src !== window.location.origin + '/artist-placeholder.svg') {
+              target.src = '/artist-placeholder.svg';
+            }
+          }}
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           loading="lazy"
         />

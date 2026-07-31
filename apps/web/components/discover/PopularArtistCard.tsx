@@ -12,7 +12,7 @@ export interface PopularArtistCardProps {
 
 export function PopularArtistCard({ artist }: PopularArtistCardProps) {
   const [imgSrc, setImgSrc] = React.useState(artist.image);
-  const fallbackImage = 'https://images.unsplash.com/photo-1493225457224-dda09a50a40d?w=150&q=80'; // generic music artist placeholder
+  const fallbackImage = '/artist-placeholder.svg';
 
   return (
     <motion.div 
