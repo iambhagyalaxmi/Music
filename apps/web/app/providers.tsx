@@ -31,16 +31,30 @@ export function Providers({ children }: { children: React.ReactNode }) {
     if (typeof window !== 'undefined' && !window.__fetchPatched) {
       const originalFetch = window.fetch;
       window.fetch = async function (...args) {
-        const res = await originalFetch.apply(this, args);
-        
-        const options = args[1] as RequestInit | undefined;
-        const method = options?.method?.toUpperCase();
-        const isMutation = method && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method);
-        
-        if (isMutation && res.ok) {
-          client.invalidateQueries({ queryKey: ['profile'] }).catch(() => {});
+        try {
+          const res = await originalFetch.apply(this, args);
+          
+          const options = args[1] as RequestInit | undefined;
+          const method = options?.method?.toUpperCase();
+          const isMutation = method && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(method);
+          
+          if (isMutation && res.ok) {
+            client.invalidateQueries({ queryKey: ['profile'] }).catch(() => {});
+          }
+          return res;
+        } catch (error) {
+          // Gracefully handle network errors (e.g., backend offline, connection refused)
+          // to prevent Next.js from throwing an Unhandled Runtime Error overlay.
+          console.warn('Network request failed, backend might be offline:', error);
+          return new Response(
+            JSON.stringify({ error: 'Network Error - Backend Offline' }), 
+            { 
+              status: 503, 
+              statusText: 'Service Unavailable',
+              headers: { 'Content-Type': 'application/json' }
+            }
+          );
         }
-        return res;
       };
       window.__fetchPatched = true;
     }
