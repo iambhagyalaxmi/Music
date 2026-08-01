@@ -133,7 +133,7 @@ export default function Home() {
           >
             <h2 className="text-5xl lg:text-7xl font-bold font-display leading-[1.1] tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-br from-white via-white to-white/40">
               Experience Music <br/>
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#7C3AED] via-[#FF4D8D] to-[#F97316]">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#06B6D4] via-[#8B5CF6] to-[#FF4D8D]">
                 Like Never Before.
               </span>
             </h2>
@@ -244,10 +244,10 @@ export default function Home() {
         >
           {/* Glassmorphic Container */}
           <div className="w-full max-w-[440px] relative">
-            {/* Ambient background glow specifically for the card */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-[#7C3AED] via-[#FF4D8D] to-[#06B6D4] rounded-[32px] blur-[30px] opacity-30 animate-pulse-glow pointer-events-none" />
+            {/* Ambient background glow specifically for the card - Reduced to be subtle */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-[#7C3AED]/30 via-[#FF4D8D]/30 to-[#06B6D4]/30 rounded-[30px] blur-[10px] opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
             
-            <div className="relative bg-white/[0.03] backdrop-blur-[40px] border border-white/[0.05] rounded-[28px] p-8 sm:p-10 shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex flex-col gap-8">
+            <div className="relative bg-[#09090B]/40 backdrop-blur-2xl border border-white/10 rounded-[28px] p-8 sm:p-10 shadow-[0_8px_32px_rgba(0,0,0,0.4)] flex flex-col gap-8 hover:border-white/20 transition-colors duration-500">
               
               <div className="text-center">
                 <div className="w-16 h-16 bg-gradient-to-br from-[#7C3AED] to-[#FF4D8D] rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-[#FF4D8D]/20 transform -rotate-6 hover:rotate-0 transition-transform duration-300">
