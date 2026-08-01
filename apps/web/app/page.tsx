@@ -247,7 +247,7 @@ export default function Home() {
             {/* Ambient background glow specifically for the card */}
             <div className="absolute -inset-1 bg-gradient-to-r from-[#7C3AED] via-[#FF4D8D] to-[#06B6D4] rounded-[32px] blur-[30px] opacity-30 animate-pulse-glow pointer-events-none" />
             
-            <div className="relative bg-[rgba(17,24,39,0.75)] backdrop-blur-[40px] border border-[rgba(255,255,255,0.1)] rounded-[28px] p-8 sm:p-10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col gap-8">
+            <div className="relative bg-white/[0.03] backdrop-blur-[40px] border border-white/[0.05] rounded-[28px] p-8 sm:p-10 shadow-[0_8px_32px_rgba(0,0,0,0.3)] flex flex-col gap-8">
               
               <div className="text-center">
                 <div className="w-16 h-16 bg-gradient-to-br from-[#7C3AED] to-[#FF4D8D] rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg shadow-[#FF4D8D]/20 transform -rotate-6 hover:rotate-0 transition-transform duration-300">
