@@ -282,7 +282,6 @@ export default function Home() {
                       onError={() => {
                         console.log('Login Failed');
                       }}
-                      useOneTap
                       theme="outline"
                       size="large"
                       width="1000" // Oversize to fill the absolute container
