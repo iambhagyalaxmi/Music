@@ -86,7 +86,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.removeItem('soundsphere_token');
     setToken(null);
     setUser(null);
-    router.push('/login');
+    router.push('/');
   };
 
   return (

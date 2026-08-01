@@ -35,7 +35,7 @@ export default function Signup() {
       </div>
 
       <p style={{ marginTop: 'var(--spacing-6)', textAlign: 'center', color: 'var(--color-text-secondary)' }}>
-        Already have an account? <Link href="/login" style={{ color: 'var(--color-accent-blue)', textDecoration: 'none' }}>Log in</Link>
+        Already have an account? <Link href="/" style={{ color: 'var(--color-accent-blue)', textDecoration: 'none' }}>Log in</Link>
       </p>
     </main>
   );

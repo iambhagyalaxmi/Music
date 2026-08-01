@@ -8,7 +8,7 @@ export function MobileNav() {
   const pathname = usePathname();
 
   // Hide on public routes
-  if (pathname === '/' || pathname === '/login' || pathname === '/register') {
+  if (pathname === '/' || pathname === '/signup') {
     return null;
   }
 
